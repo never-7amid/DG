@@ -205,7 +205,7 @@ async function confirmAnswer() {
     return;
   }
 
-  // قفل الجلسة فوراً لمنع العودة
+  // قفل الجلسة فوراً لمنع العودة وتكرار المشاركة
   const sessionTokenKey = `played_session_${currentGameData.updated_at || 'default'}`;
   localStorage.setItem(sessionTokenKey, currentId);
 
@@ -220,6 +220,7 @@ async function confirmAnswer() {
   const earnedPoints = correctCount; // نقطة لكل إجابة صحيحة
 
   try {
+    // جلب النقاط الحالية للاعب فقط
     const { data: userData } = await supabaseClient
       .from("users")
       .select("points")
@@ -229,10 +230,10 @@ async function confirmAnswer() {
     const currentPoints = userData ? (userData.points || 0) : 0;
     const newTotalPoints = currentPoints + earnedPoints;
 
+    // تحديث النقاط فقط في الداتا بيز دون المساس بنمط اللاعب الشخصي الأصلي
     const { error } = await supabaseClient
       .from("users")
       .update({ 
-        personality_type: code,
         points: newTotalPoints 
       })
       .eq("university_id", currentId);
