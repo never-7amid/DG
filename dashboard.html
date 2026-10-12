@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المحلّل — لوحة التحكم (Dashboard)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+:root{--gold:#c6a300;--ink:#08070c;--purple:#390078;--purple2:#5000a0;--white:#fff}
+html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
+body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);color:#fff;padding:2vh 2vw}
+.page{max-width:1300px;margin:auto;display:flex;flex-direction:column;gap:2.5vh}
+h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,5vw,3.5rem);font-weight:800}
+
+/* أشرطة التبويب (Tabs) */
+.tabs-nav{display:flex;justify-content:center;gap:15px;margin-bottom:1vh;flex-wrap:wrap}
+.tab-btn{background:rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.15);color:#fff;padding:12px 24px;border-radius:14px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s ease}
+.tab-btn.active{background:var(--purple2);border-color:var(--gold);color:var(--gold);box-shadow:0 0 15px rgba(198,163,0,0.4)}
+.tab-content{display:none}
+.tab-content.active{display:flex;flex-direction:column;gap:2vh}
+
+.card{background:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);border-radius:26px;padding:3vh 2.5vw;box-shadow:inset 0 0 35px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:20px}
+.card-title{color:var(--gold);font-size:clamp(1.3rem,3vw,1.8rem);font-weight:800;border-bottom:2px solid rgba(198,163,0,0.3);padding-bottom:10px}
+
+.form-group{display:flex;flex-direction:column;gap:8px}
+label{font-size:clamp(0.9rem,2vw,1.1rem);font-weight:700;color:#ffe16a}
+input, textarea, select{width:100%;padding:12px 15px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-family:Tahoma,Arial,sans-serif;font-size:1rem}
+input:focus, textarea:focus, select:focus{outline:none;border-color:var(--gold)}
+textarea{resize:vertical;min-height:100px}
+
+.btn{background:linear-gradient(110deg,#344b66,#a69ab7);color:var(--gold);border:0;border-radius:14px;padding:14px 22px;font-size:1.1rem;font-weight:800;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 10px rgba(0,0,0,0.3);text-align:center}
+.btn:hover{filter:brightness(1.1)}
+.btn-danger{background:linear-gradient(110deg,#663434,#b79a9a);color:#ffcccc}
+.btn-accent{background:linear-gradient(110deg,#780050,#a0006e);color:var(--gold)}
+
+.status-msg{font-size:0.9rem;color:#ffe16a;text-align:center;margin-top:5px}
+
+.wheel-section{display:flex;flex-direction:column;align-items:center;gap:15px;background:rgba(0,0,0,0.25);padding:20px;border-radius:16px;border:1px dashed var(--gold)}
+.wheel-result{font-size:1.4rem;color:var(--gold);font-weight:800;text-align:center;min-height:40px}
+
+.table-container{width:100%;overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.15)}
+table{width:100%;border-collapse:collapse;text-align:right;font-size:0.95rem}
+th, td{padding:12px 15px;border-bottom:1px solid rgba(255,255,255,0.1)}
+th{background:rgba(0,0,0,0.4);color:var(--gold)}
+tr:hover{background:rgba(255,255,255,0.05)}
+.pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}
+.page-btn{padding:8px 16px;background:rgba(0,0,0,0.3);border:1px solid var(--gold);color:var(--gold);border-radius:8px;cursor:pointer;font-weight:bold}
+.page-btn:disabled{opacity:0.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+<main class="page">
+  <h1>لوحة التحكم</h1>
+
+  <nav class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('newsTab', this)">شاشة الأخبار</button>
+    <button class="tab-btn" onclick="switchTab('charTab', this)">مربع الشخصية والنمط</button>
+    <button class="tab-btn" onclick="switchTab('timerTab', this)">المؤقت وحالة اللعبة</button>
+    <button class="tab-btn" onclick="switchTab('usersTab', this)">إدارة اللاعبين والنقاط</button>
+  </nav>
+
+  <!-- 1. شاشة الأخبار -->
+  <div id="newsTab" class="tab-content active">
+    <section class="card">
+      <div class="card-title">إدارة شاشة الأخبار</div>
+      <div class="form-group">
+        <label for="newsTitle">عنوان الخبر</label>
+        <input type="text" id="newsTitle" placeholder="أدخل عنوان الخبر...">
+      </div>
+      <div class="form-group">
+        <label for="newsBody">نص الخبر</label>
+        <textarea id="newsBody" placeholder="أدخل تفاصيل الخبر أو الفعالية..."></textarea>
+      </div>
+      <button class="btn" onclick="publishNews()">نشر الخبر</button>
+      <div class="status-msg" id="newsStatus"></div>
+    </section>
+  </div>
+
+  <!-- 2. مربع الشخصية والنمط مع رفع الصورة والتخصيص اليدوي -->
+  <div id="charTab" class="tab-content">
+    <section class="card">
+      <div class="card-title">تخصيص مربع الشخصية يدوياً والصورة</div>
+      
+      <div class="wheel-section">
+        <label>عجلة اختيار الشخصية المستهدفة عشوائياً (بدون تكرار):</label>
+        <button class="btn btn-accent" onclick="spinWheel()">🎡 تدوير واختيار شخصية عشوائية</button>
+        <div class="wheel-result" id="wheelResult">لم يتم الاختيار بعد</div>
+      </div>
+
+      <div class="form-group">
+        <label for="charName">اسم الشخصية</label>
+        <input type="text" id="charName" placeholder="مثال: القائد (ENTJ)">
+      </div>
+      <div class="form-group">
+        <label for="correctPersonality">النمط الصحيح للشخصية (4 أحرف مثل ENTJ)</label>
+        <input type="text" id="correctPersonality" maxlength="4" placeholder="ENTJ" style="text-transform: uppercase;">
+      </div>
+      
+      <!-- إدراج الصورة يدوياً -->
+      <div class="form-group">
+        <label for="charImageFile">إدراج وتحميل صورة من جهازك (أو رابط خارجي)</label>
+        <input type="file" id="charImageFile" accept="image/*" onchange="handleImageUpload(event)">
+        <input type="text" id="charImage" placeholder="أو أدخل رابط الصورة (URL) مباشرة...">
+      </div>
+
+      <div class="form-group">
+        <label for="charDesc">تخصيص الوصف والنص بحرية ليتناسق مع الصورة</label>
+        <textarea id="charDesc" placeholder="اكتب التفاصيل والتنسيق الذي تريد ظهوره في مربع الشخصية..."></textarea>
+      </div>
+
+      <button class="btn" onclick="updateCharacter()">حفظ وتحديث مربع الشخصية في شاشة اللعب</button>
+      <div class="status-msg" id="charStatus"></div>
+    </section>
+  </div>
+
+  <!-- 3. المؤقت وحالة اللعبة -->
+  <div id="timerTab" class="tab-content">
+    <section class="card">
+      <div class="card-title">إدارة المؤقت والوقت التنازلي الموحد</div>
+      <div class="form-group">
+        <label for="timerMinutes">مدة المؤقت (بالدقائق)</label>
+        <input type="number" id="timerMinutes" placeholder="مثال: 3" min="1" value="3">
+      </div>
+      <div style="display:flex;gap:15px;margin-top:10px;">
+        <button class="btn" style="flex:1;" onclick="setGameState(true)">فتح اللعبة وتشغيل المؤقت للجميع</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="setGameState(false)">إيقاف وإغلاق اللعبة فوراً</button>
+      </div>
+      <div class="status-msg" id="timerStatus"></div>
+    </section>
+  </div>
+
+  <!-- 4. إدارة اللاعبين والنقاط (مع Pagination) -->
+  <div id="usersTab" class="tab-content">
+    <section class="card">
+      <div class="card-title">إدارة اللاعبين المسجلين والنقاط</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الرقم الجامعي</th>
+              <th>النمط المسجل</th>
+              <th>النقاط</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="5" style="text-align:center;">جاري تحميل اللاعبين...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="paginationControls">
+        <button class="page-btn" id="prevBtn" onclick="changePage(-1)">السابق</button>
+        <span id="pageIndicator" style="color:var(--gold);font-weight:bold;">الصفحة 1</span>
+        <button class="page-btn" id="nextBtn" onclick="changePage(1)">التالي</button>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function publishNews() {
+  const title = document.getElementById("newsTitle").value.trim();
+  const body = document.getElementById("newsBody").value.trim();
+  const statusEl = document.getElementById("newsStatus");
+  if (!body) { statusEl.textContent = "الرجاء إدخال نص الخبر."; return; }
+  try {
+    const { error } = await supabaseClient.from("news").insert([{ title, body, created_at: new Date() }]);
+    if (error) throw error;
+    statusEl.textContent = "تم نشر الخبر بنجاح!";
+    document.getElementById("newsTitle").value = "";
+    document.getElementById("newsBody").value = "";
+  } catch (err) { statusEl.textContent = "حدث خطأ أثناء نشر الخبر."; }
+}
+
+// تحويل الصورة المرفوعة من الجهاز إلى Base64 لحفظها مباشرة في الداتا بيز
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById("charImage").value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function spinWheel() {
+  const wheelResultEl = document.getElementById("wheelResult");
+  try {
+    const { data: users, error } = await supabaseClient.from("users").select("name, personality_type");
+    if (error || !users || !users.length) {
+      wheelResultEl.textContent = "لا توجد شخصيات مسجلة كافية في قاعدة البيانات.";
+      return;
+    }
+
+    let usedCharacters = JSON.parse(localStorage.getItem("used_wheel_chars") || "[]");
+    let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
+
+    if (availableUsers.length === 0) {
+      wheelResultEl.textContent = "تم استنفاد جميع الشخصيات المسجلة ولا يمكن تكرارها!";
+      return;
+    }
+
+    let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+    usedCharacters.push(randomUser.name);
+    localStorage.setItem("used_wheel_chars", JSON.stringify(usedCharacters));
+
+    document.getElementById("charName").value = randomUser.name;
+    document.getElementById("correctPersonality").value = randomUser.personality_type || "";
+    wheelResultEl.textContent = `🎉 تم اختيار الشخصية عشوائياً: ${randomUser.name} (${randomUser.personality_type || "غير محدد"})`;
+  } catch (err) {
+    wheelResultEl.textContent = "حدث خطأ أثناء تدوير العجلة.";
+  }
+}
+
+async function updateCharacter() {
+  const character_name = document.getElementById("charName").value.trim();
+  const correct_personality = document.getElementById("correctPersonality").value.trim().toUpperCase();
+  const character_image = document.getElementById("charImage").value.trim();
+  const character_description = document.getElementById("charDesc").value.trim();
+  const statusEl = document.getElementById("charStatus");
+
+  try {
+    const { error } = await supabaseClient
+      .from("game_session")
+      .upsert({ id: 1, character_name, correct_personality, character_image, character_description, updated_at: new Date() });
+
+    if (error) throw error;
+    statusEl.textContent = "تم حفظ وتحديث مربع الشخصية بنجاح للجميع!";
+  } catch (err) { statusEl.textContent = "حدث خطأ أثناء التحديث."; }
+}
+
+async function setGameState(isActive) {
+  const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
+  const statusEl = document.getElementById("timerStatus");
+  const endTime = isActive ? new Date(new Date().getTime() + minutes * 60000).toISOString() : null;
+
+  try {
+    const updateData = { id: 1, is_active: isActive, updated_at: new Date() };
+    if (isActive) updateData.end_time = endTime;
+
+    const { error } = await supabaseClient.from("game_session").upsert(updateData);
+    if (error) throw error;
+
+    statusEl.textContent = isActive ? `تم فتح اللعبة وبدء المؤقت الموحد لمدة ${minutes} دقائق للجميع!` : "تم إيقاف اللعبة فوراً.";
+  } catch (err) { statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; }
+}
+
+let allUsersData = [];
+let currentPage = 1;
+const pageSize = 5;
+
+async function fetchUsersList() {
+  const tbody = document.getElementById("usersTableBody");
+  try {
+    const { data: users, error } = await supabaseClient.from("users").select("*").order("points", { ascending: false });
+    if (error) throw error;
+    allUsersData = users || [];
+    renderUsersTable();
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">تعذر تحميل اللاعبين.</td></tr>';
+  }
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById("usersTableBody");
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const paginatedUsers = allUsersData.slice(start, end);
+
+  if (!paginatedUsers.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد حسابات مسجلة.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = paginatedUsers.map(user => `
+    <tr>
+      <td>${user.name || "—"}</td>
+      <td dir="ltr">${user.university_id}</td>
+      <td><input type="text" id="type_${user.university_id}" value="${user.personality_type || ""}" maxlength="4" style="width:80px;text-transform:uppercase;"></td>
+      <td><input type="number" id="pts_${user.university_id}" value="${user.points || 0}" style="width:80px;"></td>
+      <td><button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="updateUserRow('${user.university_id}')">حفظ</button></td>
+    </tr>
+  `).join("");
+
+  document.getElementById("pageIndicator").textContent = `الصفحة ${currentPage} من ${Math.ceil(allUsersData.length / pageSize) || 1}`;
+  document.getElementById("prevBtn").disabled = currentPage === 1;
+  document.getElementById("nextBtn").disabled = end >= allUsersData.length;
+}
+
+function changePage(direction) {
+  currentPage += direction;
+  renderUsersTable();
+}
+
+async function updateUserRow(universityId) {
+  const newType = document.getElementById(`type_${universityId}`).value.trim().toUpperCase();
+  const newPts = parseInt(document.getElementById(`pts_${universityId}`).value) || 0;
+  try {
+    const { error } = await supabaseClient.from("users").update({ personality_type: newType, points: newPts }).eq("university_id", universityId);
+    if (error) throw error;
+    alert("تم تحديث بيانات اللاعب بنجاح!");
+    fetchUsersList();
+  } catch (err) { alert("حدث خطأ أثناء التحديث."); }
+}
+
+fetchUsersList();
+</script>
+</body>
+</html>

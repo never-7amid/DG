@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المحلّل — تسجيل الدخول</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{min-height:100vh;min-height:100dvh;overflow-x:hidden;font-family:Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);color:#05040a}
+.page{width:100%;min-height:100vh;min-height:100dvh;position:relative;padding:3vh 4vw;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.logo{margin:0 0 1.5vh;color:#c6a300;font-size:clamp(2.8rem,8vw,5.5rem);line-height:1.1;font-weight:400;text-align:center}
+.subtitle{margin:0 0 3.5vh;text-align:center;font-size:clamp(1.3rem,4vw,2.2rem);font-weight:800;line-height:1.3;text-shadow:2px 3px 2px rgba(0,0,0,.25);color:#fff}
+.form{width:100%;max-width:700px;background:rgba(255,255,255,0.05);padding:3.5vh 3vw;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:2.5vh}
+.field{width:100%;display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:2vw}
+.field label{color:#c6a300;font-size:clamp(1.1rem,3vw,1.5rem);font-weight:700;white-space:nowrap}
+.field input{width:100%;min-width:0;height:54px;border:0;border-radius:12px;outline:none;padding:0 16px;background:linear-gradient(110deg,#344b66 0%,#817b9b 100%);color:#fff;font:600 clamp(1rem,2.5vw,1.2rem) Tahoma,Arial,sans-serif;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+.field input:focus{outline:2px solid rgba(198,163,0,.75);outline-offset:2px}.field input::placeholder{color:rgba(255,255,255,.65)}.field input[dir=ltr]{text-align:left}
+.actions{display:flex;flex-direction:column;align-items:center;gap:2vh;margin-top:1vh}
+.next{width:min(60%,320px);min-height:56px;padding:10px 20px;border:3px dotted #05040a;border-radius:16px;background:linear-gradient(110deg,rgba(52,75,102,.5),rgba(129,123,155,.5));color:#05040a;font:700 clamp(1.2rem,3vw,1.6rem) Tahoma,Arial,sans-serif;cursor:pointer;transition:transform 0.2s ease}
+.next:hover{transform:scale(1.02)}
+.account{border:0;background:transparent;color:#05040a;font:800 clamp(1.1rem,3vw,1.4rem) Tahoma,Arial,sans-serif;text-shadow:1px 2px 2px rgba(0,0,0,0.15);cursor:pointer;padding:5px 10px}
+.account:hover{text-decoration:underline}
+.message{display:none;width:100%;max-width:700px;margin:15px auto 0;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.2);text-align:center;font-size:1rem;line-height:1.7;overflow-wrap:anywhere}.message.show{display:block}.message.error{color:#5b0710;background:rgba(255,100,100,0.2)}.message.success{color:#073d24;background:rgba(100,255,100,0.2)}.hidden{display:none!important}button:disabled{opacity:.65;cursor:wait}
+@media(max-width:600px){.form{padding:2.5vh 4vw}.field{grid-template-columns:1fr;gap:8px}}
+</style>
+</head>
+<body><main class="page">
+<h1 class="logo">المُحلِّل</h1><h2 class="subtitle" id="heading">تسجيل جديد</h2>
+<form class="form" id="authForm" novalidate>
+<div class="field" id="nameField"><label for="name">الاسم</label><input id="name" name="name" type="text" autocomplete="name" maxlength="80" aria-label="الاسم" required></div>
+<div class="field" id="universityField"><label for="universityId">رقمك الجامعي</label><input id="universityId" name="university_id" type="text" inputmode="numeric" autocomplete="username" maxlength="12" pattern="[0-9]{1,12}" dir="ltr" aria-label="رقمك الجامعي" required></div>
+<div class="field" id="typeField"><label for="personalityType">النمط</label><input id="personalityType" name="personality_type" type="text" maxlength="4" minlength="4" pattern="(INTJ|INTP|ENTJ|ENTP|INFJ|INFP|ENFJ|ENFP|ISTJ|ISFJ|ESTJ|ESFJ|ISTP|ISFP|ESTP|ESFP)" autocapitalize="characters" spellcheck="false" dir="ltr" aria-label="النمط" required></div>
+<div class="field" id="passwordField"><label for="password">كلمة السر</label><input id="password" name="password" type="password" minlength="1" maxlength="6" autocomplete="current-password" aria-label="كلمة السر" required></div>
+<div class="actions"><button class="next" id="nextButton" type="submit">التالي</button><button class="account" id="accountButton" type="button">لدي حساب بالفعل</button></div>
+<div class="message" id="message" role="status" aria-live="polite"></div>
+</form></main>
+<script>
+const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const form = document.getElementById("authForm"), heading = document.getElementById("heading");
+const nameField = document.getElementById("nameField"), typeField = document.getElementById("typeField");
+const nameInput = document.getElementById("name"), idInput = document.getElementById("universityId");
+const typeInput = document.getElementById("personalityType"), passwordInput = document.getElementById("password");
+const nextButton = document.getElementById("nextButton"), accountButton = document.getElementById("accountButton");
+const message = document.getElementById("message"); 
+let loginMode = false;
+
+function showMessage(text, kind = "") {
+  message.textContent = text;
+  message.className = `message show ${kind}`;
+}
+
+function setMode(isLogin) {
+  loginMode = isLogin;
+  heading.textContent = isLogin ? "تسجيل الدخول" : "تسجيل جديد";
+  nameField.classList.toggle("hidden", isLogin);
+  typeField.classList.toggle("hidden", isLogin);
+  nameInput.required = !isLogin;
+  typeInput.required = !isLogin;
+  passwordInput.autocomplete = isLogin ? "current-password" : "new-password";
+  accountButton.textContent = isLogin ? "إنشاء حساب جديد" : "لدي حساب بالفعل";
+  message.className = "message";
+  message.textContent = "";
+}
+
+accountButton.addEventListener("click", () => setMode(!loginMode));
+idInput.addEventListener("input", () => idInput.value = idInput.value.replace(/\D/g, "").slice(0, 12));
+typeInput.addEventListener("input", () => typeInput.value = typeInput.value.replace(/[^a-z]/gi, "").toUpperCase().slice(0, 4));
+passwordInput.addEventListener("input", () => passwordInput.value = passwordInput.value.replace(/[^a-z0-9]/gi, "").slice(0, 6));
+
+function validateForm() {
+  if (!/^[0-9]{1,12}$/.test(idInput.value.trim())) {
+    showMessage("الرجاء إدخال رقم جامعي صحيح لا يتجاوز 12 رقماً.", "error");
+    return false;
+  }
+  if (passwordInput.value.length < 1 || passwordInput.value.length > 6 || !/^[a-z0-9]+$/i.test(passwordInput.value)) {
+    showMessage("كلمة السر يجب أن تتكون من حروف وأرقام، وبحد أقصى 6 خانات.", "error");
+    return false;
+  }
+  if (!loginMode) {
+    if (!nameInput.value.trim()) {
+      showMessage("الرجاء إدخال الاسم.", "error");
+      return false;
+    }
+    const types = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"];
+    if (!types.includes(typeInput.value.toUpperCase())) {
+      showMessage("الرجاء إدخال نمط صحيح من أربعة أحرف إنجليزية، مثل ENTJ.", "error");
+      return false;
+    }
+  }
+  return true;
+}
+
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!validateForm()) return;
+
+  nextButton.disabled = true;
+  showMessage("جارٍ معالجة البيانات…");
+
+  const universityId = idInput.value.trim();
+  const password = passwordInput.value;
+
+  try {
+    if (loginMode) {
+      // جلب بيانات المستخدم بالتحديد حصرياً عبر الرقم الجامعي المطابق وكلمة المرور
+      const { data, error } = await supabaseClient
+        .from("users")
+        .select("*")
+        .eq("university_id", universityId)
+        .eq("password", password)
+        .maybeSingle();
+
+      if (error || !data) {
+        showMessage("الحساب غير موجود أو كلمة السر غير صحيحة.", "error");
+        nextButton.disabled = false;
+        return;
+      }
+
+      // حفظ الرقم الجامعي حصرياً للمستخدم المطابق في الذاكرة لتتم قراءته بدقة في باقي الصفحات
+      localStorage.setItem("analyzer_current_user", universityId);
+      showMessage("تم تسجيل الدخول بنجاح!", "success");
+      
+      setTimeout(() => {
+        window.location.href = data.is_admin ? "dashboard.html" : "main.html";
+      }, 800);
+
+    } else {
+      // تسجيل حساب جديد بالرقم الجامعي المطابق المدخل
+      const name = nameInput.value.trim();
+      const personality_type = typeInput.value.toUpperCase();
+
+      const { data: existingUser } = await supabaseClient
+        .from("users")
+        .select("university_id")
+        .eq("university_id", universityId)
+        .maybeSingle();
+
+      if (existingUser) {
+        showMessage("الرقم الجامعي مسجل مسبقاً، قم بتسجيل الدخول.", "error");
+        nextButton.disabled = false;
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("users")
+        .insert([{ name, university_id: universityId, personality_type, password, points: 0, is_admin: false }]);
+
+      if (error) throw error;
+
+      localStorage.setItem("analyzer_current_user", universityId);
+      showMessage("تم إنشاء الحساب بنجاح!", "success");
+      
+      setTimeout(() => {
+        window.location.href = "main.html";
+      }, 800);
+    }
+
+  } catch (err) {
+    console.error(err);
+    showMessage("حدث خطأ أثناء الاتصال بقاعدة البيانات.", "error");
+    nextButton.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
