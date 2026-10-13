@@ -7,15 +7,40 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-:root{--gold:#c6a300;--ink:#08070c;--purple:#390078;--purple2:#5000a0;--white:#fff}
+:root{--gold:#c6a300;--ink:#08070c;--purple:#390078;--purple2:#5000a0;--white:#fff;--bg-gradient:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);--card-bg:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);--text-color:#fff;--pill-bg:#050505}
+
+/* الألوان المعكوسة (Color Reverse Mode) */
+body.color-reversed{
+  --gold:#1f1b2b;
+  --ink:#ffffff;
+  --purple:#d0bdf4;
+  --purple2:#e0d6f6;
+  --white:#111;
+  --bg-gradient:linear-gradient(135deg,#e8ecf1 0%,#a2a8ba 48%,#6f6885 100%);
+  --card-bg:linear-gradient(120deg,#d1aee6,#a293d0 65%,#8b7ab8);
+  --text-color:#05040a;
+  --pill-bg:#f0f0f0;
+}
+
 html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
-body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);color:#fff}
+body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(--text-color);transition:background 0.3s ease, color 0.3s ease}
 .page{min-height:100vh;min-height:100dvh;padding:3.2vh 1.6vw 5vh;display:flex;flex-direction:column;gap:2.2vh}
+
+/* زر عكس الألوان العائم */
+.theme-toggle-btn{position:fixed;bottom:20px;right:20px;z-index:99;background:var(--gold);color:var(--white);border:0;border-radius:50px;padding:12px 20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px}
+
 h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4rem);line-height:1.2;font-weight:800}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:1.5vh 3.5vw 0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1.5vh 3.5vw 0;flex-wrap:wrap}
 .student-id{font-size:clamp(1.15rem,3.8vw,2.6rem);color:var(--gold);font-weight:400}
-.play-link{min-width:35%;max-width:440px;min-height:62px;padding:14px 22px;border:0;border-radius:20px 20px 12px 12px;background:linear-gradient(110deg,#344b66,#a69ab7);box-shadow:9px 10px 0 #171521,16px 17px 0 rgba(31,27,43,.25);color:var(--gold);font-size:clamp(1rem,3.3vw,2rem);font-weight:800;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
-.news-panel{min-height:38vh;border-radius:26px;background:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);padding:2.2vh 3vw 3vh;position:relative;overflow:hidden;box-shadow:inset 0 0 35px rgba(0,0,0,.08)}
+
+.nav-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.play-link, .back-home-btn, .whatsapp-btn{min-height:50px;padding:10px 18px;border:0;border-radius:14px;color:var(--gold);font-size:clamp(0.9rem,2.5vw,1.3rem);font-weight:800;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.2);transition:transform 0.2s ease}
+.play-link{background:linear-gradient(110deg,#344b66,#a69ab7)}
+.back-home-btn{background:rgba(0,0,0,0.25);border:2px solid var(--gold)}
+.whatsapp-btn{background:#25d366;color:#fff!important;gap:6px}
+.play-link:hover, .back-home-btn:hover, .whatsapp-btn:hover{transform:scale(1.03)}
+
+.news-panel{min-height:38vh;border-radius:26px;background:var(--card-bg);padding:2.2vh 3vw 3vh;position:relative;overflow:hidden;box-shadow:inset 0 0 35px rgba(0,0,0,.08)}
 .news-panel:before{content:"";position:absolute;inset:-50% auto -50% -35%;width:35%;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);animation:shine 6s linear infinite;pointer-events:none}
 @keyframes shine{from{left:-40%}to{left:120%}}
 .news-title{margin:0 0 2vh;text-align:center;color:var(--gold);font-size:clamp(2rem,6vw,3.8rem);font-weight:800;position:relative}
@@ -27,10 +52,11 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .news-dots{display:flex;justify-content:center;gap:8px;margin-top:8px}
 .news-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
 .news-dots span.active{background:var(--gold);transform:scale(1.25)}
+
 .leader-area{display:grid;grid-template-columns:1fr 1fr;gap:2vw;margin-top:5vh;flex:1}
 .leader-card{position:relative;min-width:0;padding:0 1vw 2vh;text-align:center;display:flex;flex-direction:column;align-items:center}
-.leader-card + .leader-card:before{content:"";position:absolute;right:-1vw;top:7vh;bottom:-5vh;width:4px;background:#390078;border-radius:5px}
-.pill{width:100%;min-height:66px;border-radius:50% / 50%;border:7px solid #7b7893;outline:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;background:#050505;color:var(--gold);font-size:clamp(1rem,3vw,1.8rem);font-weight:800;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04)}
+.leader-card + .leader-card:before{content:"";position:absolute;right:-1vw;top:7vh;bottom:-5vh;width:4px;background:var(--purple);border-radius:5px}
+.pill{width:100%;min-height:66px;border-radius:50% / 50%;border:7px solid #7b7893;outline:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;background:var(--pill-bg);color:var(--gold);font-size:clamp(1rem,3vw,1.8rem);font-weight:800;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04)}
 .leader-card:first-child .pill{background:linear-gradient(100deg,#410071,#4a00a0)}
 .description{font-size:clamp(.88rem,2.4vw,1.45rem);line-height:1.8;font-weight:700;margin:5vh 0 2vh}
 .list{width:100%;display:flex;flex-direction:column;gap:12px}
@@ -41,171 +67,17 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .my-rank{width:100%;margin-top:1vh;padding:18px 12px;border-radius:16px;background:rgba(0,0,0,.2);line-height:2;font-size:clamp(.95rem,2.3vw,1.25rem)}
 .my-rank strong{color:#ffe16a}
 .status{font-size:.8rem;opacity:.8;text-align:center;margin-top:8px}
+
 @media(min-width:800px){.page{max-width:1400px;margin:auto;padding-left:24px;padding-right:24px}.news-panel{min-height:350px}.news-content{min-height:220px}.leader-area{margin-top:35px}}
-@media(max-width:560px){.page{padding:2.5vh 3vw 4vh;gap:2vh}h1{font-size:clamp(1.9rem,7vw,2.8rem)}.topbar{padding:1vh 1vw;gap:10px}.student-id{font-size:clamp(1rem,3.7vw,1.25rem)}.play-link{min-width:40%;min-height:54px;padding:10px 12px;font-size:clamp(.9rem,3.5vw,1.1rem)}.news-panel{min-height:33vh;border-radius:20px;padding:2vh 4vw}.news-content{min-height:22vh}.leader-area{margin-top:4vh;gap:2vw}.pill{min-height:54px;border-width:5px}.description{margin-top:3vh;font-size:clamp(.78rem,2.7vw,.95rem)}.person{grid-template-columns:minmax(0,1fr) auto;padding:10px 6px;font-size:.8rem;gap:3px}.leader-card{padding:0 1vw}.leader-card + .leader-card:before{right:-1vw}}
+@media(max-width:560px){.page{padding:2.5vh 3vw 4vh;gap:2vh}h1{font-size:clamp(1.9rem,7vw,2.8rem)}.topbar{padding:1vh 1vw;gap:10px}.student-id{font-size:clamp(1rem,3.7vw,1.25rem)}.news-panel{min-height:33vh;border-radius:20px;padding:2vh 4vw}.news-content{min-height:22vh}.leader-area{margin-top:4vh;gap:2vw}.pill{min-height:54px;border-width:5px}.description{margin-top:3vh;font-size:clamp(.78rem,2.7vw,.95rem)}.person{grid-template-columns:minmax(0,1fr) auto;padding:10px 6px;font-size:.8rem;gap:3px}.leader-card{padding:0 1vw}.leader-card + .leader-card:before{right:-1vw}}
 </style>
 </head>
 <body>
 <main class="page">
   <h1>المتتبع الرئيسية</h1>
+  
   <div class="topbar">
     <div class="student-id">رقمي الجامعي : <span id="studentId">جاري التحميل...</span></div>
-    <a class="play-link" href="game.html">انتقل الى اللعب</a>
-  </div>
-
-  <section class="news-panel" aria-label="شاشة الأخبار">
-    <h2 class="news-title">شاشة الأخبار</h2>
-    <div class="news-content" id="newsContent"></div>
-    <div class="news-dots" id="newsDots" aria-hidden="true"></div>
-  </section>
-
-  <section class="leader-area">
-    <div class="leader-card">
-      <div class="pill">ترتيبي</div>
-      <p class="description">ترتيب ونقاط اللاعب الذي يحمل الرقم الجامعي المطابق</p>
-      <div class="my-rank" id="myRank">
-        <div>الاسم: <strong id="myName">جاري التحميل...</strong></div>
-        <div>النقاط: <strong id="myPoints">—</strong></div>
-        <div>الترتيب: <strong id="myPosition">—</strong></div>
-      </div>
-    </div>
-    <div class="leader-card">
-      <div class="pill">قائمة المتصدرين</div>
-      <p class="description">الخمس الذين لديهم اكبر عدد من النقاط</p>
-      <div class="list" id="leaderList">
-        <div class="empty">جاري تحميل المتصدرين...</div>
-      </div>
-    </div>
-  </section>
-  <div class="status" id="dataStatus"></div>
-</main>
-
-<script>
-const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-function escapeText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, ch => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[ch]);
-}
-
-let newsList = [];
-let newsIndex = 0;
-let newsTimer = null;
-
-function renderNews(index) {
-  const newsContent = document.getElementById("newsContent");
-  const dots = document.getElementById("newsDots");
-  
-  if (!newsList.length) {
-    newsContent.innerHTML = '<div class="news-item">لا توجد أخبار حالياً.</div>';
-    dots.innerHTML = "";
-    return;
-  }
-  
-  const item = newsList[index];
-  newsContent.innerHTML = `<article class="news-item" key="${index}">
-    ${item.title ? `<strong>${escapeText(item.title)}</strong><br>` : ""}
-    ${escapeText(item.body || item.content || item.text || "")}
-    ${item.created_at || item.date ? `<span class="date">${escapeText(new Date(item.created_at || item.date).toLocaleDateString("ar-SA"))}</span>` : ""}
-  </article>`;
-  dots.innerHTML = newsList.map((_, i) => `<span class="${i === index ? "active" : ""}"></span>`).join("");
-}
-
-function startNewsRotation() {
-  if (newsTimer) clearInterval(newsTimer);
-  renderNews(newsIndex);
-  if (newsList.length > 1) {
-    newsTimer = setInterval(() => {
-      newsIndex = (newsIndex + 1) % newsList.length;
-      renderNews(newsIndex);
-    }, 5500);
-  }
-}
-
-async function fetchNews() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("news")
-      .select("*")
-      .order("created_at", { ascending: false });
-      
-    if (error) throw error;
-    newsList = data || [];
-    startNewsRotation();
-  } catch (err) {
-    document.getElementById("newsContent").innerHTML = '<div class="news-item">تعذر تحميل الأخبار.</div>';
-  }
-}
-
-// جلب وتزامن بيانات اللاعب الحالي حصرياً عبر الرقم الجامعي المطابق المسجل من login.html
-async function fetchStudentAndLeaderboard() {
-  const leaderList = document.getElementById("leaderList");
-  const currentId = localStorage.getItem("analyzer_current_user");
-
-  // إذا لم يتم تسجيل الدخول بالرقم الجامعي، يوجه اللاعب إلى تسجيل الدخول
-  if (!currentId) {
-    alert("يرجى تسجيل الدخول برقمك الجامعي أولاً.");
-    window.location.href = "login.html";
-    return;
-  }
-
-  document.getElementById("studentId").textContent = currentId;
-
-  try {
-    // 1. جلب بيانات اللاعب الحالي الحصرية بناءً على المطابقة التامة للرقم الجامعي
-    const { data: currentUser, error: userError } = await supabaseClient
-      .from("users")
-      .select("*")
-      .eq("university_id", currentId)
-      .single();
-
-    if (userError || !currentUser) {
-      alert("لم يتم العثور على حسابك في النظام، يرجى إعادة تسجيل الدخول.");
-      localStorage.removeItem("analyzer_current_user");
-      window.location.href = "login.html";
-      return;
-    }
-
-    // 2. جلب جميع المستخدمين لحساب الترتيب العام وقائمة المتصدرين
-    const { data: allUsers, error: listError } = await supabaseClient
-      .from("users")
-      .select("*")
-      .order("points", { ascending: false });
-
-    if (listError) throw listError;
-
-    const usersList = allUsers || [];
-
-    // عرض قائمة أعلى 5 متصدرين
-    const topFive = usersList.slice(0, 5);
-    if (topFive.length) {
-      leaderList.innerHTML = topFive.map((user, index) => `
-        <div class="person">
-          <span><span class="rank">#${index + 1}</span> ${escapeText(user.name || "لاعب")}</span>
-          <span class="score">${Number(user.points) || 0} نقطة</span>
-        </div>`).join("");
-    } else {
-      leaderList.innerHTML = '<div class="empty">لا توجد نتائج مسجلة بعد.</div>';
-    }
-
-    // حساب وترتيب اللاعب الحالي بدقة
-    const userRankIndex = usersList.findIndex(u => String(u.university_id) === String(currentId));
-    
-    document.getElementById("myName").textContent = currentUser.name || "لاعب";
-    document.getElementById("myPoints").textContent = Number(currentUser.points) || 0;
-    document.getElementById("myPosition").textContent = userRankIndex !== -1 ? `#${userRankIndex + 1}` : "غير مصنف";
-
-  } catch (err) {
-    console.error(err);
-    leaderList.innerHTML = '<div class="empty">تعذر جلب البيانات من قاعدة البيانات.</div>';
-  }
-}
-
-fetchNews();
-fetchStudentAndLeaderboard();
-</script>
-</body>
-</html>
+    <div class="nav-actions">
+      <!-- زر الرجوع إلى الواجهة الرئيسية -->
+      <a class
