@@ -7,46 +7,72 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-:root{--gold:#c6a300;--ink:#08070c;--purple:#390078;--purple2:#5000a0;--white:#fff}
+:root{--gold:#c6a300;--ink:#08070c;--purple:#390078;--purple2:#5000a0;--white:#fff;--bg-gradient:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);--card-bg:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);--text-color:#fff;--pill-bg:#050505}
+
+/* الوضع المتبدل: أبيض مع أحمر مشع (Light & Vibrant Red Mode) */
+body.color-reversed{
+  --gold:#d90429;
+  --ink:#111111;
+  --purple:#ff4d6d;
+  --purple2:#d90429;
+  --white:#ffffff;
+  --bg-gradient:linear-gradient(135deg, #ffffff 0%, #f8d7da 50%, #f5c6cb 100%);
+  --card-bg:linear-gradient(120deg, #ffffff, #fff0f3 65%, #ffe3e6);
+  --text-color:#2b0507;
+  --pill-bg:#ffffff;
+}
+
 html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
-body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,#344b66 0%,#59627f 48%,#817b9b 100%);color:#fff;padding:2vh 2vw}
+body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(--text-color);padding:2vh 2vw;transition:background 0.3s ease, color 0.3s ease}
+
+/* زر تبديل الألوان العائم */
+.theme-toggle-btn{position:fixed;bottom:20px;left:20px;z-index:99;background:var(--gold);color:#fff;border:0;border-radius:50px;padding:12px 20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px}
+
 .page{max-width:1300px;margin:auto;display:flex;flex-direction:column;gap:2.5vh}
 h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,5vw,3.5rem);font-weight:800}
 
 /* أشرطة التبويب (Tabs) */
 .tabs-nav{display:flex;justify-content:center;gap:15px;margin-bottom:1vh;flex-wrap:wrap}
 .tab-btn{background:rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.15);color:#fff;padding:12px 24px;border-radius:14px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s ease}
-.tab-btn.active{background:var(--purple2);border-color:var(--gold);color:var(--gold);box-shadow:0 0 15px rgba(198,163,0,0.4)}
+.tab-btn.active{background:var(--purple2);border-color:var(--gold);color:var(--white);box-shadow:0 0 15px rgba(217,4,41,0.4)}
 .tab-content{display:none}
 .tab-content.active{display:flex;flex-direction:column;gap:2vh}
 
-.card{background:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);border-radius:26px;padding:3vh 2.5vw;box-shadow:inset 0 0 35px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:20px}
-.card-title{color:var(--gold);font-size:clamp(1.3rem,3vw,1.8rem);font-weight:800;border-bottom:2px solid rgba(198,163,0,0.3);padding-bottom:10px}
+.card{background:var(--card-bg);border-radius:26px;padding:3vh 2.5vw;box-shadow:inset 0 0 35px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:20px}
+.card-title{color:var(--gold);font-size:clamp(1.3rem,3vw,1.8rem);font-weight:800;border-bottom:2px solid rgba(217,4,41,0.3);padding-bottom:10px}
 
 .form-group{display:flex;flex-direction:column;gap:8px}
-label{font-size:clamp(0.9rem,2vw,1.1rem);font-weight:700;color:#ffe16a}
-input, textarea, select{width:100%;padding:12px 15px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-family:Tahoma,Arial,sans-serif;font-size:1rem}
+label{font-size:clamp(0.9rem,2vw,1.1rem);font-weight:700;color:var(--gold)}
+input, textarea, select{width:100%;padding:12px 15px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.15);color:var(--text-color);font-family:Tahoma,Arial,sans-serif;font-size:1rem}
+body.color-reversed input, body.color-reversed textarea, body.color-reversed select{background:#ffffff;border-color:#d90429;color:#000}
 input:focus, textarea:focus, select:focus{outline:none;border-color:var(--gold)}
 textarea{resize:vertical;min-height:100px}
 
 .btn{background:linear-gradient(110deg,#344b66,#a69ab7);color:var(--gold);border:0;border-radius:14px;padding:14px 22px;font-size:1.1rem;font-weight:800;cursor:pointer;transition:all 0.2s ease;box-shadow:0 4px 10px rgba(0,0,0,0.3);text-align:center}
 .btn:hover{filter:brightness(1.1)}
-.btn-danger{background:linear-gradient(110deg,#663434,#b79a9a);color:#ffcccc}
-.btn-accent{background:linear-gradient(110deg,#780050,#a0006e);color:var(--gold)}
+.btn-danger{background:linear-gradient(110deg,#d90429,#ff4d6d);color:#fff}
+.btn-accent{background:linear-gradient(110deg,#780050,#d90429);color:#fff}
 
-.status-msg{font-size:0.9rem;color:#ffe16a;text-align:center;margin-top:5px}
+.status-msg{font-size:0.9rem;color:var(--gold);text-align:center;margin-top:5px}
 
-.wheel-section{display:flex;flex-direction:column;align-items:center;gap:15px;background:rgba(0,0,0,0.25);padding:20px;border-radius:16px;border:1px dashed var(--gold)}
+.wheel-section{display:flex;flex-direction:column;align-items:center;gap:15px;background:rgba(0,0,0,0.1);padding:20px;border-radius:16px;border:1px dashed var(--gold)}
 .wheel-result{font-size:1.4rem;color:var(--gold);font-weight:800;text-align:center;min-height:40px}
 
 .table-container{width:100%;overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.15)}
 table{width:100%;border-collapse:collapse;text-align:right;font-size:0.95rem}
 th, td{padding:12px 15px;border-bottom:1px solid rgba(255,255,255,0.1)}
-th{background:rgba(0,0,0,0.4);color:var(--gold)}
+th{background:rgba(0,0,0,0.2);color:var(--gold)}
 tr:hover{background:rgba(255,255,255,0.05)}
 .pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}
-.page-btn{padding:8px 16px;background:rgba(0,0,0,0.3);border:1px solid var(--gold);color:var(--gold);border-radius:8px;cursor:pointer;font-weight:bold}
+.page-btn{padding:8px 16px;background:rgba(0,0,0,0.2);border:1px solid var(--gold);color:var(--gold);border-radius:8px;cursor:pointer;font-weight:bold}
 .page-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* قائمة الأخبار السابقة في لوحة التحكم */
+.news-manage-list{display:flex;flex-direction:column;gap:12px;max-height:350px;overflow-y:auto;margin-top:10px}
+.news-manage-item{background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.1);padding:12px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.news-info{flex:1}
+.news-info strong{color:var(--gold);display:block;margin-bottom:4px}
+.news-actions{display:flex;gap:6px}
 </style>
 </head>
 <body>
@@ -60,10 +86,10 @@ tr:hover{background:rgba(255,255,255,0.05)}
     <button class="tab-btn" onclick="switchTab('usersTab', this)">إدارة اللاعبين والنقاط</button>
   </nav>
 
-  <!-- 1. شاشة الأخبار -->
+  <!-- 1. شاشة الأخبار والتحكم بالأخبار السابقة -->
   <div id="newsTab" class="tab-content active">
     <section class="card">
-      <div class="card-title">إدارة شاشة الأخبار</div>
+      <div class="card-title">نشر خبر جديد</div>
       <div class="form-group">
         <label for="newsTitle">عنوان الخبر</label>
         <input type="text" id="newsTitle" placeholder="أدخل عنوان الخبر...">
@@ -74,6 +100,14 @@ tr:hover{background:rgba(255,255,255,0.05)}
       </div>
       <button class="btn" onclick="publishNews()">نشر الخبر</button>
       <div class="status-msg" id="newsStatus"></div>
+    </section>
+
+    <!-- قسم إدارة الأخبار السابقة (تعديل وحذف) -->
+    <section class="card">
+      <div class="card-title">إدارة الأخبار السابقة (تعديل / حذف)</div>
+      <div class="news-manage-list" id="newsManageList">
+        <div style="text-align:center; opacity:0.8;">جاري تحميل الأخبار...</div>
+      </div>
     </section>
   </div>
 
@@ -97,7 +131,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <input type="text" id="correctPersonality" maxlength="4" placeholder="ENTJ" style="text-transform: uppercase;">
       </div>
       
-      <!-- إدراج الصورة يدوياً -->
       <div class="form-group">
         <label for="charImageFile">إدراج وتحميل صورة من جهازك (أو رابط خارجي)</label>
         <input type="file" id="charImageFile" accept="image/*" onchange="handleImageUpload(event)">
@@ -160,10 +193,26 @@ tr:hover{background:rgba(255,255,255,0.05)}
 
 </main>
 
+<!-- زر تبديل الألوان العائم -->
+<button class="theme-toggle-btn" onclick="toggleColorReverse()">
+  🔴 <span>أبيض وأحمر</span>
+</button>
+
 <script>
 const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// خاصية تبديل الألوان (Color Theme Toggle)
+function toggleColorReverse() {
+  document.body.classList.toggle("color-reversed");
+  const isReversed = document.body.classList.contains("color-reversed");
+  localStorage.setItem("analyzer_color_reversed", isReversed ? "true" : "false");
+}
+
+if (localStorage.getItem("analyzer_color_reversed") === "true") {
+  document.body.classList.add("color-reversed");
+}
 
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -172,6 +221,13 @@ function switchTab(tabId, btn) {
   btn.classList.add('active');
 }
 
+function escapeText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[ch]);
+}
+
+// نشر وجلب وإدارة الأخبار السابقة
 async function publishNews() {
   const title = document.getElementById("newsTitle").value.trim();
   const body = document.getElementById("newsBody").value.trim();
@@ -183,10 +239,62 @@ async function publishNews() {
     statusEl.textContent = "تم نشر الخبر بنجاح!";
     document.getElementById("newsTitle").value = "";
     document.getElementById("newsBody").value = "";
+    fetchPreviousNews();
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء نشر الخبر."; }
 }
 
-// تحويل الصورة المرفوعة من الجهاز إلى Base64 لحفظها مباشرة في الداتا بيز
+async function fetchPreviousNews() {
+  const listContainer = document.getElementById("newsManageList");
+  try {
+    const { data: news, error } = await supabaseClient.from("news").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    
+    if (!news || !news.length) {
+      listContainer.innerHTML = '<div style="text-align:center; opacity:0.8;">لا توجد أخبار مسجلة حالياً.</div>';
+      return;
+    }
+
+    listContainer.innerHTML = news.map(item => `
+      <div class="news-manage-item">
+        <div class="news-info">
+          <strong>${escapeText(item.title || "بدون عنوان")}</strong>
+          <span>${escapeText(item.body || item.content || "")}</span>
+        </div>
+        <div class="news-actions">
+          <button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="editNews(${item.id}, '${escapeText(item.title || '')}', '${escapeText(item.body || item.content || '')}')">تعديل</button>
+          <button class="btn btn-danger" style="padding:6px 12px;font-size:0.85rem;" onclick="deleteNews(${item.id})">حذف</button>
+        </div>
+      </div>
+    `).join("");
+  } catch (err) {
+    listContainer.innerHTML = '<div style="text-align:center; color:#ffcccc;">تعذر تحميل الأخبار السابقة.</div>';
+  }
+}
+
+async function deleteNews(id) {
+  if (!confirm("هل أنت متأكد من حذف هذا الخبر نهائياً؟")) return;
+  try {
+    const { error } = await supabaseClient.from("news").delete().eq("id", id);
+    if (error) throw error;
+    alert("تم حذف الخبر بنجاح!");
+    fetchPreviousNews();
+  } catch (err) { alert("حدث خطأ أثناء الحذف."); }
+}
+
+async function editNews(id, oldTitle, oldBody) {
+  const newTitle = prompt("تعديل عنوان الخبر:", oldTitle);
+  if (newTitle === null) return;
+  const newBody = prompt("تعديل نص الخبر:", oldBody);
+  if (newBody === null) return;
+
+  try {
+    const { error } = await supabaseClient.from("news").update({ title: newTitle, body: newBody }).eq("id", id);
+    if (error) throw error;
+    alert("تم تحديث الخبر بنجاح!");
+    fetchPreviousNews();
+  } catch (err) { alert("حدث خطأ أثناء التعديل."); }
+}
+
 function handleImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -288,10 +396,10 @@ function renderUsersTable() {
 
   tbody.innerHTML = paginatedUsers.map(user => `
     <tr>
-      <td>${user.name || "—"}</td>
-      <td dir="ltr">${user.university_id}</td>
-      <td><input type="text" id="type_${user.university_id}" value="${user.personality_type || ""}" maxlength="4" style="width:80px;text-transform:uppercase;"></td>
-      <td><input type="number" id="pts_${user.university_id}" value="${user.points || 0}" style="width:80px;"></td>
+      <td>${escapeText(user.name || "—")}</td>
+      <td dir="ltr">${escapeText(user.university_id)}</td>
+      <td><input type="text" id="type_${user.university_id}" value="${escapeText(user.personality_type || "")}" maxlength="4" style="width:80px;text-transform:uppercase;"></td>
+      <td><input type="number" id="pts_${user.university_id}" value="${Number(user.points) || 0}" style="width:80px;"></td>
       <td><button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="updateUserRow('${user.university_id}')">حفظ</button></td>
     </tr>
   `).join("");
@@ -318,6 +426,7 @@ async function updateUserRow(universityId) {
 }
 
 fetchUsersList();
+fetchPreviousNews();
 </script>
 </body>
 </html>
