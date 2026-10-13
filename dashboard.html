@@ -98,7 +98,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <label for="newsBody">نص الخبر</label>
         <textarea id="newsBody" placeholder="أدخل تفاصيل الخبر أو الفعالية..."></textarea>
       </div>
-      <button class="btn" onclick="publishNews()">نشر الخبر</button>
+      <button class="btn" id="publishNewsBtn">نشر الخبر</button>
       <div class="status-msg" id="newsStatus"></div>
     </section>
 
@@ -118,7 +118,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
       
       <div class="wheel-section">
         <label>عجلة اختيار الشخصية المستهدفة عشوائياً (بدون تكرار):</label>
-        <button class="btn btn-accent" onclick="spinWheel()">🎡 تدوير واختيار شخصية عشوائية</button>
+        <button class="btn btn-accent" id="spinWheelBtn">🎡 تدوير واختيار شخصية عشوائية</button>
         <div class="wheel-result" id="wheelResult">لم يتم الاختيار بعد</div>
       </div>
 
@@ -133,7 +133,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
       
       <div class="form-group">
         <label for="charImageFile">إدراج وتحميل صورة من جهازك (أو رابط خارجي)</label>
-        <input type="file" id="charImageFile" accept="image/*" onchange="handleImageUpload(event)">
+        <input type="file" id="charImageFile" accept="image/*">
         <input type="text" id="charImage" placeholder="أو أدخل رابط الصورة (URL) مباشرة...">
       </div>
 
@@ -142,7 +142,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <textarea id="charDesc" placeholder="اكتب التفاصيل والتنسيق الذي تريد ظهوره في مربع الشخصية..."></textarea>
       </div>
 
-      <button class="btn" onclick="updateCharacter()">حفظ وتحديث مربع الشخصية في شاشة اللعب</button>
+      <button class="btn" id="updateCharBtn">حفظ وتحديث مربع الشخصية في شاشة اللعب</button>
       <div class="status-msg" id="charStatus"></div>
     </section>
   </div>
@@ -156,8 +156,8 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <input type="number" id="timerMinutes" placeholder="مثال: 3" min="1" value="3">
       </div>
       <div style="display:flex;gap:15px;margin-top:10px;">
-        <button class="btn" style="flex:1;" onclick="setGameState(true)">فتح اللعبة وتشغيل المؤقت للجميع</button>
-        <button class="btn btn-danger" style="flex:1;" onclick="setGameState(false)">إيقاف وإغلاق اللعبة فوراً</button>
+        <button class="btn" style="flex:1;" id="startTimerBtn">فتح اللعبة وتشغيل المؤقت للجميع</button>
+        <button class="btn btn-danger" style="flex:1;" id="stopTimerBtn">إيقاف وإغلاق اللعبة فوراً</button>
       </div>
       <div class="status-msg" id="timerStatus"></div>
     </section>
@@ -184,9 +184,9 @@ tr:hover{background:rgba(255,255,255,0.05)}
         </table>
       </div>
       <div class="pagination" id="paginationControls">
-        <button class="page-btn" id="prevBtn" onclick="changePage(-1)">السابق</button>
+        <button class="page-btn" id="prevBtn">السابق</button>
         <span id="pageIndicator" style="color:var(--gold);font-weight:bold;">الصفحة 1</span>
-        <button class="page-btn" id="nextBtn" onclick="changePage(1)">التالي</button>
+        <button class="page-btn" id="nextBtn">التالي</button>
       </div>
     </section>
   </div>
@@ -194,7 +194,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
 </main>
 
 <!-- زر تبديل الألوان العائم -->
-<button class="theme-toggle-btn" onclick="toggleColorReverse()">
+<button class="theme-toggle-btn" id="themeToggleBtn">
   🔴 <span>أبيض وأحمر</span>
 </button>
 
@@ -213,6 +213,8 @@ function toggleColorReverse() {
 if (localStorage.getItem("analyzer_color_reversed") === "true") {
   document.body.classList.add("color-reversed");
 }
+
+document.getElementById("themeToggleBtn").addEventListener("click", toggleColorReverse);
 
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -243,6 +245,8 @@ async function publishNews() {
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء نشر الخبر."; }
 }
 
+document.getElementById("publishNewsBtn").addEventListener("click", publishNews);
+
 async function fetchPreviousNews() {
   const listContainer = document.getElementById("newsManageList");
   try {
@@ -254,18 +258,45 @@ async function fetchPreviousNews() {
       return;
     }
 
-    listContainer.innerHTML = news.map(item => `
-      <div class="news-manage-item">
-        <div class="news-info">
-          <strong>${escapeText(item.title || "بدون عنوان")}</strong>
-          <span>${escapeText(item.body || item.content || "")}</span>
-        </div>
-        <div class="news-actions">
-          <button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="editNews(${item.id}, '${escapeText(item.title || '')}', '${escapeText(item.body || item.content || '')}')">تعديل</button>
-          <button class="btn btn-danger" style="padding:6px 12px;font-size:0.85rem;" onclick="deleteNews(${item.id})">حذف</button>
-        </div>
-      </div>
-    `).join("");
+    listContainer.innerHTML = "";
+    news.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "news-manage-item";
+      
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "news-info";
+      
+      const strong = document.createElement("strong");
+      strong.textContent = item.title || "بدون عنوان";
+      
+      const span = document.createElement("span");
+      span.textContent = item.body || item.content || "";
+      
+      infoDiv.appendChild(strong);
+      infoDiv.appendChild(span);
+      
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "news-actions";
+      
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn";
+      editBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
+      editBtn.textContent = "تعديل";
+      editBtn.addEventListener("click", () => editNews(item.id, item.title || "", item.body || item.content || ""));
+      
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-danger";
+      deleteBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
+      deleteBtn.textContent = "حذف";
+      deleteBtn.addEventListener("click", () => deleteNews(item.id));
+      
+      actionsDiv.appendChild(editBtn);
+      actionsDiv.appendChild(deleteBtn);
+      
+      div.appendChild(infoDiv);
+      div.appendChild(actionsDiv);
+      listContainer.appendChild(div);
+    });
   } catch (err) {
     listContainer.innerHTML = '<div style="text-align:center; color:#ffcccc;">تعذر تحميل الأخبار السابقة.</div>';
   }
@@ -295,7 +326,7 @@ async function editNews(id, oldTitle, oldBody) {
   } catch (err) { alert("حدث خطأ أثناء التعديل."); }
 }
 
-function handleImageUpload(event) {
+document.getElementById("charImageFile").addEventListener("change", function(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -303,7 +334,7 @@ function handleImageUpload(event) {
     document.getElementById("charImage").value = e.target.result;
   };
   reader.readAsDataURL(file);
-}
+});
 
 async function spinWheel() {
   const wheelResultEl = document.getElementById("wheelResult");
@@ -334,6 +365,8 @@ async function spinWheel() {
   }
 }
 
+document.getElementById("spinWheelBtn").addEventListener("click", spinWheel);
+
 async function updateCharacter() {
   const character_name = document.getElementById("charName").value.trim();
   const correct_personality = document.getElementById("correctPersonality").value.trim().toUpperCase();
@@ -351,6 +384,8 @@ async function updateCharacter() {
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء التحديث."; }
 }
 
+document.getElementById("updateCharBtn").addEventListener("click", updateCharacter);
+
 async function setGameState(isActive) {
   const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
   const statusEl = document.getElementById("timerStatus");
@@ -366,6 +401,9 @@ async function setGameState(isActive) {
     statusEl.textContent = isActive ? `تم فتح اللعبة وبدء المؤقت الموحد لمدة ${minutes} دقائق للجميع!` : "تم إيقاف اللعبة فوراً.";
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; }
 }
+
+document.getElementById("startTimerBtn").addEventListener("click", () => setGameState(true));
+document.getElementById("stopTimerBtn").addEventListener("click", () => setGameState(false));
 
 let allUsersData = [];
 let currentPage = 1;
@@ -394,25 +432,69 @@ function renderUsersTable() {
     return;
   }
 
-  tbody.innerHTML = paginatedUsers.map(user => `
-    <tr>
-      <td>${escapeText(user.name || "—")}</td>
-      <td dir="ltr">${escapeText(user.university_id)}</td>
-      <td><input type="text" id="type_${user.university_id}" value="${escapeText(user.personality_type || "")}" maxlength="4" style="width:80px;text-transform:uppercase;"></td>
-      <td><input type="number" id="pts_${user.university_id}" value="${Number(user.points) || 0}" style="width:80px;"></td>
-      <td><button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="updateUserRow('${user.university_id}')">حفظ</button></td>
-    </tr>
-  `).join("");
+  tbody.innerHTML = "";
+  paginatedUsers.forEach(user => {
+    const tr = document.createElement("tr");
+    
+    const tdName = document.createElement("td");
+    tdName.textContent = user.name || "—";
+    
+    const tdId = document.createElement("td");
+    tdId.setAttribute("dir", "ltr");
+    tdId.textContent = user.university_id;
+    
+    const tdType = document.createElement("td");
+    const inputType = document.createElement("input");
+    inputType.type = "text";
+    inputType.id = `type_${user.university_id}`;
+    inputType.value = user.personality_type || "";
+    inputType.maxLength = 4;
+    inputType.style.cssText = "width:80px;text-transform:uppercase;";
+    tdType.appendChild(inputType);
+    
+    const tdPts = document.createElement("td");
+    const inputPts = document.createElement("input");
+    inputPts.type = "number";
+    inputPts.id = `pts_${user.university_id}`;
+    inputPts.value = user.points || 0;
+    inputPts.style.width = "80px";
+    tdPts.appendChild(inputPts);
+    
+    const tdAction = document.createElement("td");
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "btn";
+    saveBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
+    saveBtn.textContent = "حفظ";
+    saveBtn.addEventListener("click", () => updateUserRow(user.university_id));
+    tdAction.appendChild(saveBtn);
+    
+    tr.appendChild(tdName);
+    tr.appendChild(tdId);
+    tr.appendChild(tdType);
+    tr.appendChild(tdPts);
+    tr.appendChild(tdAction);
+    
+    tbody.appendChild(tr);
+  });
 
   document.getElementById("pageIndicator").textContent = `الصفحة ${currentPage} من ${Math.ceil(allUsersData.length / pageSize) || 1}`;
-  document.getElementById("prevBtn").disabled = currentPage === 1;
+  document.getElementById("prevBtndisabled", currentPage === 1);
   document.getElementById("nextBtn").disabled = end >= allUsersData.length;
 }
 
-function changePage(direction) {
-  currentPage += direction;
-  renderUsersTable();
-}
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderUsersTable();
+  }
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (currentPage * pageSize < allUsersData.length) {
+    currentPage++;
+    renderUsersTable();
+  }
+});
 
 async function updateUserRow(universityId) {
   const newType = document.getElementById(`type_${universityId}`).value.trim().toUpperCase();
