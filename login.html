@@ -12,8 +12,10 @@
 .form{width:100%;max-width:700px;background:rgba(255,255,255,0.05);padding:3.5vh 3vw;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:2.5vh}
 .field{width:100%;display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:2vw}
 .field label{color:#c6a300;font-size:clamp(1.1rem,3vw,1.5rem);font-weight:700;white-space:nowrap}
-.field input{width:100%;min-width:0;height:54px;border:0;border-radius:12px;outline:none;padding:0 16px;background:linear-gradient(110deg,#344b66 0%,#817b9b 100%);color:#fff;font:600 clamp(1rem,2.5vw,1.2rem) Tahoma,Arial,sans-serif;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
-.field input:focus{outline:2px solid rgba(198,163,0,.75);outline-offset:2px}.field input::placeholder{color:rgba(255,255,255,.65)}.field input[dir=ltr]{text-align:left}
+.field input, .field select{width:100%;min-width:0;height:54px;border:0;border-radius:12px;outline:none;padding:0 16px;background:linear-gradient(110deg,#344b66 0%,#817b9b 100%);color:#fff;font:600 clamp(1rem,2.5vw,1.2rem) Tahoma,Arial,sans-serif;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+.field select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');background-repeat:no-repeat;background-position:left 16px center;cursor:pointer}
+.field select option{background:#344b66;color:#fff}
+.field input:focus, .field select:focus{outline:2px solid rgba(198,163,0,.75);outline-offset:2px}.field input::placeholder{color:rgba(255,255,255,.65)}.field input[dir=ltr]{text-align:left}
 .actions{display:flex;flex-direction:column;align-items:center;gap:2vh;margin-top:1vh}
 .next{width:min(60%,320px);min-height:56px;padding:10px 20px;border:3px dotted #05040a;border-radius:16px;background:linear-gradient(110deg,rgba(52,75,102,.5),rgba(129,123,155,.5));color:#05040a;font:700 clamp(1.2rem,3vw,1.6rem) Tahoma,Arial,sans-serif;cursor:pointer;transition:transform 0.2s ease}
 .next:hover{transform:scale(1.02)}
@@ -24,11 +26,32 @@
 </style>
 </head>
 <body><main class="page">
-<h1 class="logo">المُحلِّل</h1><h2 class="subtitle" id="heading">تسجيل جديد</h2>
+<h1 class="logo">المُحلِّل</h1><h2 class="subtitle" id="heading">تسجيل جديد</h2>
 <form class="form" id="authForm" novalidate>
 <div class="field" id="nameField"><label for="name">الاسم</label><input id="name" name="name" type="text" autocomplete="name" maxlength="80" aria-label="الاسم" required></div>
 <div class="field" id="universityField"><label for="universityId">رقمك الجامعي</label><input id="universityId" name="university_id" type="text" inputmode="numeric" autocomplete="username" maxlength="12" pattern="[0-9]{1,12}" dir="ltr" aria-label="رقمك الجامعي" required></div>
-<div class="field" id="typeField"><label for="personalityType">النمط</label><input id="personalityType" name="personality_type" type="text" maxlength="4" minlength="4" pattern="(INTJ|INTP|ENTJ|ENTP|INFJ|INFP|ENFJ|ENFP|ISTJ|ISFJ|ESTJ|ESFJ|ISTP|ISFP|ESTP|ESFP)" autocapitalize="characters" spellcheck="false" dir="ltr" aria-label="النمط" required></div>
+<div class="field" id="typeField">
+  <label for="personalityType">النمط</label>
+  <select id="personalityType" name="personality_type" dir="ltr" aria-label="النمط" required>
+    <option value="" disabled selected>اختر النمط الشخصي...</option>
+    <option value="INTJ">INTJ</option>
+    <option value="INTP">INTP</option>
+    <option value="ENTJ">ENTJ</option>
+    <option value="ENTP">ENTP</option>
+    <option value="INFJ">INFJ</option>
+    <option value="INFP">INFP</option>
+    <option value="ENFJ">ENFJ</option>
+    <option value="ENFP">ENFP</option>
+    <option value="ISTJ">ISTJ</option>
+    <option value="ISFJ">ISFJ</option>
+    <option value="ESTJ">ESTJ</option>
+    <option value="ESFJ">ESFJ</option>
+    <option value="ISTP">ISTP</option>
+    <option value="ISFP">ISFP</option>
+    <option value="ESTP">ESTP</option>
+    <option value="ESFP">ESFP</option>
+  </select>
+</div>
 <div class="field" id="passwordField"><label for="password">كلمة السر</label><input id="password" name="password" type="password" minlength="1" maxlength="6" autocomplete="current-password" aria-label="كلمة السر" required></div>
 <div class="actions"><button class="next" id="nextButton" type="submit">التالي</button><button class="account" id="accountButton" type="button">لدي حساب بالفعل</button></div>
 <div class="message" id="message" role="status" aria-live="polite"></div>
@@ -66,7 +89,6 @@ function setMode(isLogin) {
 
 accountButton.addEventListener("click", () => setMode(!loginMode));
 idInput.addEventListener("input", () => idInput.value = idInput.value.replace(/\D/g, "").slice(0, 12));
-typeInput.addEventListener("input", () => typeInput.value = typeInput.value.replace(/[^a-z]/gi, "").toUpperCase().slice(0, 4));
 passwordInput.addEventListener("input", () => passwordInput.value = passwordInput.value.replace(/[^a-z0-9]/gi, "").slice(0, 6));
 
 function validateForm() {
@@ -84,8 +106,8 @@ function validateForm() {
       return false;
     }
     const types = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"];
-    if (!types.includes(typeInput.value.toUpperCase())) {
-      showMessage("الرجاء إدخال نمط صحيح من أربعة أحرف إنجليزية، مثل ENTJ.", "error");
+    if (!typeInput.value || !types.includes(typeInput.value.toUpperCase())) {
+      showMessage("الرجاء اختيار نمط صحيح من القائمة.", "error");
       return false;
     }
   }
@@ -104,7 +126,6 @@ form.addEventListener("submit", async event => {
 
   try {
     if (loginMode) {
-      // جلب بيانات المستخدم بالتحديد حصرياً عبر الرقم الجامعي المطابق وكلمة المرور
       const { data, error } = await supabaseClient
         .from("users")
         .select("*")
@@ -118,7 +139,6 @@ form.addEventListener("submit", async event => {
         return;
       }
 
-      // حفظ الرقم الجامعي حصرياً للمستخدم المطابق في الذاكرة لتتم قراءته بدقة في باقي الصفحات
       localStorage.setItem("analyzer_current_user", universityId);
       showMessage("تم تسجيل الدخول بنجاح!", "success");
       
@@ -127,7 +147,6 @@ form.addEventListener("submit", async event => {
       }, 800);
 
     } else {
-      // تسجيل حساب جديد بالرقم الجامعي المطابق المدخل
       const name = nameInput.value.trim();
       const personality_type = typeInput.value.toUpperCase();
 
