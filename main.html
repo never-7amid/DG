@@ -26,8 +26,27 @@ html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
 body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(--text-color);transition:background 0.3s ease, color 0.3s ease}
 .page{min-height:100vh;min-height:100dvh;padding:3.2vh 1.6vw 5vh;display:flex;flex-direction:column;gap:2.2vh}
 
-/* زر عكس الألوان العائم */
-.theme-toggle-btn{position:fixed;bottom:20px;right:20px;z-index:99;background:var(--gold);color:var(--white);border:0;border-radius:50px;padding:12px 20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px}
+/* زر عكس الألوان القابل للتحريك والسحب يدوياً */
+.theme-toggle-btn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  z-index:100;
+  background:var(--gold);
+  color:var(--white);
+  border:0;
+  border-radius:50px;
+  padding:12px 22px;
+  font-weight:bold;
+  cursor:grab;
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  user-select:none;
+  touch-action:none;
+}
+.theme-toggle-btn:active{cursor:grabbing}
 
 h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4rem);line-height:1.2;font-weight:800}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1.5vh 3.5vw 0;flex-wrap:wrap}
@@ -115,8 +134,8 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
   <div class="status" id="dataStatus"></div>
 </main>
 
-<!-- زر عكس الألوان العائم -->
-<button class="theme-toggle-btn" onclick="toggleColorReverse()">
+<!-- زر عكس الألوان العائم وقابل للسحب والتحريك -->
+<button class="theme-toggle-btn" id="themeToggleBtn">
   🎨 <span>عكس الألوان</span>
 </button>
 
@@ -125,15 +144,90 @@ const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// خاصية عكس الألوان (Color Reverse)
-function toggleColorReverse() {
-  document.body.classList.toggle("color-reversed");
-  const isReversed = document.body.classList.contains("color-reversed");
-  localStorage.setItem("analyzer_color_reversed", isReversed ? "true" : "false");
+// جعل زر عكس الألوان قابلاً للسحب والتحريك يدوياً في أي مكان على الشاشة
+(function makeButtonDraggable() {
+  const btn = document.getElementById("themeToggleBtn");
+  let isDragging = false;
+  let hasDragged = false;
+  let startX, startY, initialLeft, initialTop;
+
+  function onPointerDown(e) {
+    isDragging = true;
+    hasDragged = false;
+    startX = e.clientX || (e.touches && e.touches[0].clientX);
+    startY = e.clientY || (e.touches && e.touches[0].clientY);
+    const rect = btn.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("touchmove", onPointerMove);
+    document.addEventListener("touchend", onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+    const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+    const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
+
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      hasDragged = true;
+    }
+
+    let newLeft = initialLeft + deltaX;
+    let newTop = initialTop + deltaY;
+
+    const maxLeft = window.innerWidth - btn.offsetWidth - 10;
+    const maxTop = window.innerHeight - btn.offsetHeight - 10;
+    newLeft = Math.max(10, Math.min(newLeft, maxLeft));
+    newTop = Math.max(10, Math.min(newTop, maxTop));
+
+    btn.style.left = newLeft + "px";
+    btn.style.top = newTop + "px";
+    btn.style.bottom = "auto";
+    btn.style.right = "auto";
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+    document.removeEventListener("touchmove", onPointerMove);
+    document.removeEventListener("touchend", onPointerUp);
+  }
+
+  btn.addEventListener("pointerdown", onPointerDown);
+  btn.addEventListener("touchstart", onPointerDown, { passive: true });
+
+  btn.addEventListener("click", (e) => {
+    if (hasDragged) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    } else {
+      toggleColorReverse();
+    }
+  });
+})();
+
+// مزامنة حالة عكس الألوان عبر Supabase (بدلاً من التخزين المحلي)
+async function fetchThemeState() {
+  try {
+    const { data } = await supabaseClient.from("game_session").select("theme_reversed").eq("id", 1).maybeSingle();
+    if (data && data.theme_reversed) {
+      document.body.classList.add("color-reversed");
+    }
+  } catch(e) {}
 }
 
-if (localStorage.getItem("analyzer_color_reversed") === "true") {
-  document.body.classList.add("color-reversed");
+async function toggleColorReverse() {
+  document.body.classList.toggle("color-reversed");
+  const isReversed = document.body.classList.contains("color-reversed");
+  try {
+    await supabaseClient.from("game_session").upsert({ id: 1, theme_reversed: isReversed, updated_at: new Date() });
+  } catch(e) {}
 }
 
 function escapeText(value) {
@@ -201,7 +295,6 @@ async function fetchStudentAndLeaderboard() {
     document.getElementById("myPoints").textContent = "—";
     document.getElementById("myPosition").textContent = "—";
     
-    // إمكانية تصفح المتصدرين حتى وإن لم يسجل الدخول
     try {
       const { data: allUsers } = await supabaseClient
         .from("users")
@@ -272,6 +365,7 @@ async function fetchStudentAndLeaderboard() {
   }
 }
 
+fetchThemeState();
 fetchNews();
 fetchStudentAndLeaderboard();
 </script>
