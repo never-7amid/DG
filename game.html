@@ -28,6 +28,7 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .option-box:hover{border-color:var(--gold);background:#1a1230}
 .option-box.selected{border-color:var(--gold);background:var(--purple2);box-shadow:0 0 10px rgba(198,163,0,0.5)}
 
+/* تلوين الخيارات عند التأكيد */
 .option-box.correct-choice{border-color:#2ecc71 !important;background:rgba(46, 204, 113, 0.25) !important;box-shadow:0 0 12px rgba(46, 204, 113, 0.6)}
 .option-box.wrong-choice{border-color:#e74c3c !important;background:rgba(231, 76, 60, 0.25) !important;box-shadow:0 0 12px rgba(231, 76, 60, 0.6)}
 
@@ -37,6 +38,8 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .bottom-actions{display:flex;flex-direction:column;align-items:center;gap:15px;margin-top:1vh}
 .confirm-btn{background:linear-gradient(110deg,#344b66,#a69ab7);color:var(--gold);border:2px solid var(--gold);border-radius:16px;padding:12px 35px;font-size:clamp(1.1rem,3vw,1.5rem);font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:transform 0.2s ease}
 .confirm-btn:hover{transform:scale(1.03)}
+.back-btn{background:linear-gradient(110deg,#780050,#d90429);color:#fff;display:none}
+.back-btn.show{display:inline-block}
 
 .timer-section{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .timer-display{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(0,0,0,0.25);border:2px solid var(--gold);padding:8px 20px;border-radius:50px;box-shadow:0 4px 15px rgba(0,0,0,0.3)}
@@ -100,6 +103,7 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 
   <div class="bottom-actions">
     <button class="confirm-btn" id="confirmBtn" onclick="confirmAnswer()">تأكيد الإجابة</button>
+    <button class="confirm-btn back-btn" id="backBtn" onclick="redirectToMain()">العودة إلى الرئيسية</button>
     <div class="timer-section">
       <div class="timer-display">
         <span class="timer-icon">⏱️</span>
@@ -171,7 +175,6 @@ async function fetchGameSettings() {
     currentGameData = charData;
     const currentSessionId = String(charData.session_id || charData.updated_at || 'default_session');
 
-    // التحقق الدقيق والآمن من مشاركة اللاعب الحالية فقط دون التأثير على الجلسات الجديدة أو اللاعبين الجدد
     const { data: participation } = await supabaseClient
       .from("game_participations")
       .select("id")
@@ -213,7 +216,8 @@ async function confirmAnswer() {
   }
 
   isAnswerSubmitted = true;
-  document.getElementById("confirmBtn").disabled = true;
+  document.getElementById("confirmBtn").style.display = "none";
+  document.getElementById("backBtn").classList.add("show");
 
   const targetPersonality = currentGameData.correct_personality.toUpperCase();
   let correctCount = 0;
@@ -264,15 +268,9 @@ async function confirmAnswer() {
 
     if (error) throw error;
 
-    setTimeout(() => {
-      alert(`تم تأكيد الإجابة بنجاح!\nأصبت في ${correctCount} من 4 أحرف.\nتمت إضافة ${earnedPoints} نقطة إلى رصيدك.`);
-      window.location.href = "main.html";
-    }, 1500);
-
   } catch (err) {
     console.error(err);
     alert("حدث خطأ أثناء حفظ النقاط أو أنك شاركت في هذه الجلسة مسبقاً.");
-    setTimeout(() => window.location.href = "main.html", 2000);
   }
 }
 
