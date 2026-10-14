@@ -28,7 +28,6 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .option-box:hover{border-color:var(--gold);background:#1a1230}
 .option-box.selected{border-color:var(--gold);background:var(--purple2);box-shadow:0 0 10px rgba(198,163,0,0.5)}
 
-/* تلوين الخيارات عند التأكيد */
 .option-box.correct-choice{border-color:#2ecc71 !important;background:rgba(46, 204, 113, 0.25) !important;box-shadow:0 0 12px rgba(46, 204, 113, 0.6)}
 .option-box.wrong-choice{border-color:#e74c3c !important;background:rgba(231, 76, 60, 0.25) !important;box-shadow:0 0 12px rgba(231, 76, 60, 0.6)}
 
@@ -170,14 +169,14 @@ async function fetchGameSettings() {
     }
 
     currentGameData = charData;
-    const currentSessionId = charData.session_id || charData.updated_at || 'default_session';
+    const currentSessionId = String(charData.session_id || charData.updated_at || 'default_session');
 
-    // التحقق عبر قاعدة البيانات (Supabase) عما إذا كان اللاعب قد شارك في هذه الجلسة مسبقاً
+    // التحقق الدقيق والآمن من مشاركة اللاعب الحالية فقط دون التأثير على الجلسات الجديدة أو اللاعبين الجدد
     const { data: participation } = await supabaseClient
       .from("game_participations")
       .select("id")
-      .eq("university_id", currentId)
-      .eq("session_id", String(currentSessionId))
+      .eq("university_id", String(currentId))
+      .eq("session_id", currentSessionId)
       .maybeSingle();
 
     if (participation) {
@@ -219,7 +218,6 @@ async function confirmAnswer() {
   const targetPersonality = currentGameData.correct_personality.toUpperCase();
   let correctCount = 0;
 
-  // مطابقة الإجابات وتلوين الخيارات (أخضر للأصح، أحمر للخطأ)
   const categories = ['energy', 'info', 'decision', 'lifestyle'];
   categories.forEach((cat, idx) => {
     const card = document.querySelector(`.category-card[data-category="${cat}"]`);
@@ -241,21 +239,19 @@ async function confirmAnswer() {
   });
 
   const earnedPoints = correctCount;
-  const currentSessionId = currentGameData.session_id || currentGameData.updated_at || 'default_session';
+  const currentSessionId = String(currentGameData.session_id || currentGameData.updated_at || 'default_session');
 
   try {
-    // تسجيل المشاركة في الداتا بيز لمنع التكرار لنفس الجلسة
     const { error: partError } = await supabaseClient
       .from("game_participations")
-      .insert([{ university_id: currentId, session_id: String(currentSessionId) }]);
+      .insert([{ university_id: String(currentId), session_id: currentSessionId }]);
 
     if (partError) throw partError;
 
-    // جلب وتحديث نقاط اللاعب في الداتا بيز
     const { data: userData } = await supabaseClient
       .from("users")
       .select("points")
-      .eq("university_id", currentId)
+      .eq("university_id", String(currentId))
       .single();
 
     const currentPoints = userData ? (userData.points || 0) : 0;
@@ -264,7 +260,7 @@ async function confirmAnswer() {
     const { error } = await supabaseClient
       .from("users")
       .update({ points: newTotalPoints })
-      .eq("university_id", currentId);
+      .eq("university_id", String(currentId));
 
     if (error) throw error;
 
