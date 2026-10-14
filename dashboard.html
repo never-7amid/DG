@@ -122,8 +122,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
   <div style="color:var(--gold); font-size:1.4rem; font-weight:bold; text-align:center; margin-bottom:10px;">لوحة تحكم الأدمن</div>
   <button class="sidebar-btn active" onclick="switchTab('overviewTab', this)">🏠 لوحة الأدمن الرئيسية</button>
   <button class="sidebar-btn" onclick="switchTab('newsTab', this)">📰 شاشة الأخبار</button>
-  <button class="sidebar-btn" onclick="switchTab('charTab', this)">👤 مربع الشخصية والنمط</button>
-  <button class="sidebar-btn" onclick="switchTab('timerTab', this)">⏱️ المؤقت وحالة اللعبة</button>
+  <button class="sidebar-btn" onclick="switchTab('sessionCharTab', this)">⏱️ إدارة الجلسة والشخصية</button>
   <button class="sidebar-btn" onclick="switchTab('usersTab', this)">👥 إدارة اللاعبين والنقاط</button>
 </nav>
 
@@ -197,14 +196,14 @@ tr:hover{background:rgba(255,255,255,0.05)}
     </section>
   </div>
 
-  <!-- 2. مربع الشخصية والنمط -->
-  <div id="charTab" class="tab-content">
+  <!-- 2. إدارة الجلسة والشخصية (مدمجة بالكامل) -->
+  <div id="sessionCharTab" class="tab-content">
     <section class="card">
-      <div class="card-title">تخصيص مربع الشخصية يدوياً والصورة</div>
+      <div class="card-title">إعدادات الشخصية والوقت وفتح الجلسة</div>
       
       <div class="wheel-section">
         <label>عجلة اختيار الشخصية المستهدفة عشوائياً (بدون تكرار):</label>
-        <button class="btn btn-accent" id="spinWheelBtn">🎡 تدوير واختيار شخصية عشوائية</button>
+        <button class="btn btn-accent" id="spinWheelBtn">🎡 تدوير واختيار شخصية عشوائية فريدة</button>
         <div class="wheel-result" id="wheelResult">لم يتم الاختيار بعد</div>
       </div>
 
@@ -218,7 +217,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
       </div>
       
       <div class="form-group">
-        <label for="charImageFile">إدراج وتحميل صورة من الجهاز</label>
+        <label for="charImageFile">إدراج وتحميل صورة الشخصية من الجهاز</label>
         <input type="file" id="charImageFile" accept="image/*">
         <input type="hidden" id="charImage">
       </div>
@@ -228,17 +227,8 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <textarea id="charDesc" placeholder="اكتب التفاصيل والتنسيق الذي تريد ظهوره في مربع الشخصية..."></textarea>
       </div>
 
-      <button class="btn" id="updateCharBtn">حفظ وتحديث مربع الشخصية في شاشة اللعب</button>
-      <div class="status-msg" id="charStatus"></div>
-    </section>
-  </div>
-
-  <!-- 3. المؤقت وحالة اللعبة -->
-  <div id="timerTab" class="tab-content">
-    <section class="card">
-      <div class="card-title">إدارة المؤقت والوقت التنازلي الموحد</div>
       <div class="form-group">
-        <label for="timerMinutes">مدة المؤقت (بالدقائق)</label>
+        <label for="timerMinutes">مدة الجلسة الحالية (بالدقائق)</label>
         <select id="timerMinutes">
           <option value="3">3 دقائق</option>
           <option value="4">4 دقائق</option>
@@ -255,19 +245,17 @@ tr:hover{background:rgba(255,255,255,0.05)}
       <div class="form-group" style="background:rgba(0,0,0,0.15); padding:15px; border-radius:12px; border:1px solid var(--gold);">
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
           <input type="checkbox" id="autoNextRound" style="width:20px; height:20px; accent-color:var(--gold);">
-          <span>تفعيل ميزة "الجولات المتتالية" (فتح جولة جديدة تلقائياً بشخصية جديدة عند انتهاء الوقت)</span>
+          <span>تفعيل ميزة "الجولات المتتالية" (فتح جولة جديدة تلقائياً بالشخصيات غير المتكررة عند انتهاء الوقت)</span>
         </label>
       </div>
 
-      <div style="display:flex;gap:15px;margin-top:10px;">
-        <button class="btn" style="flex:1;" id="startTimerBtn">فتح الجلسة وتشغيل المؤقت للجميع</button>
-        <button class="btn btn-danger" style="flex:1;" id="stopTimerBtn">إيقاف وإغلاق الجلسة فوراً</button>
-      </div>
-      <div class="status-msg" id="timerStatus"></div>
+      <!-- زر الحفظ وفتح الجلسة المدمج -->
+      <button class="btn" id="saveAndStartSessionBtn">حفظ البيانات وفتح الجلسة وتشغيل المؤقت للجميع 🚀</button>
+      <div class="status-msg" id="sessionCharStatus"></div>
     </section>
 
     <section class="card">
-      <div class="card-title">📡 مراقبة الجلسة الحالية</div>
+      <div class="card-title">📡 مراقبة الجلسة الحالية والصيانة</div>
       <div class="session-monitor-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>حالة الجلسة: <span id="monitorStatusBadge" class="inactive-badge">مغلقة</span></div>
@@ -279,6 +267,8 @@ tr:hover{background:rgba(255,255,255,0.05)}
           <div class="session-timer-badge" id="monitorCountdown">00:00</div>
         </div>
       </div>
+      <!-- زر الصيانة الجانبي -->
+      <button class="btn btn-danger" id="maintenanceStopBtn" style="margin-top:10px;">⚠️ إيقاف الجلسة وإغلاقها للصيانة والطوارئ</button>
     </section>
 
     <section class="card">
@@ -307,7 +297,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
     </section>
   </div>
 
-  <!-- 4. إدارة اللاعبين والنقاط -->
+  <!-- 3. إدارة اللاعبين والنقاط -->
   <div id="usersTab" class="tab-content">
     <section class="card">
       <div class="card-title">إدارة اللاعبين المسجلين والنقاط</div>
@@ -613,13 +603,10 @@ async function spinWheel() {
     }
 
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
-    usedCharacters.push(randomUser.name);
     
-    await supabaseClient.from("game_session").update({ used_chars: usedCharacters, updated_at: new Date() }).eq("id", 1);
-
     document.getElementById("charName").value = randomUser.name;
     document.getElementById("correctPersonality").value = randomUser.personality_type || "";
-    wheelResultEl.textContent = `🎉 تم اختيار الشخصية عشوائياً: ${randomUser.name} (${randomUser.personality_type || "غير محدد"})`;
+    wheelResultEl.textContent = `🎉 تم اختيار الشخصية عشوائياً بدون تكرار: ${randomUser.name} (${randomUser.personality_type || "غير محدد"})`;
   } catch (err) {
     wheelResultEl.textContent = "حدث خطأ أثناء تدوير العجلة.";
   }
@@ -627,37 +614,46 @@ async function spinWheel() {
 
 document.getElementById("spinWheelBtn").addEventListener("click", spinWheel);
 
-async function updateCharacter() {
+// زر الحفظ وفتح الجلسة المدمج (لا يسمح بتكرار الشخصية)
+async function saveAndStartSession() {
   const character_name = document.getElementById("charName").value.trim();
   const correct_personality = document.getElementById("correctPersonality").value.trim().toUpperCase();
   const character_image = document.getElementById("charImage").value.trim();
   const character_description = document.getElementById("charDesc").value.trim();
-  const statusEl = document.getElementById("charStatus");
-
-  try {
-    const { error } = await supabaseClient
-      .from("game_session")
-      .update({ character_name, correct_personality, character_image, character_description, updated_at: new Date() })
-      .eq("id", 1);
-
-    if (error) throw error;
-    statusEl.textContent = "تم حفظ وتحديث مربع الشخصية بنجاح للجميع!";
-    fetchSessionMonitor();
-  } catch (err) { statusEl.textContent = "حدث خطأ أثناء التحديث."; }
-}
-
-document.getElementById("updateCharBtn").addEventListener("click", updateCharacter);
-
-async function setGameState(isActive) {
   const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
-  const statusEl = document.getElementById("timerStatus");
-  const endTime = isActive ? new Date(new Date().getTime() + minutes * 60000).toISOString() : null;
-  const newSessionId = "session_" + Date.now();
   const autoNext = document.getElementById("autoNextRound").checked;
+  const statusEl = document.getElementById("sessionCharStatus");
+
+  if (!character_name) {
+    statusEl.textContent = "الرجاء اختيار أو إدخال اسم الشخصية المستهدفة.";
+    return;
+  }
 
   try {
+    // التحقق من عدم تكرار الشخصية في الجلسات السابقة عبر used_chars
+    const { data: sessionData } = await supabaseClient.from("game_session").select("used_chars").eq("id", 1).maybeSingle();
+    let usedCharacters = sessionData?.used_chars || [];
+    if (!Array.isArray(usedCharacters)) {
+      try { usedCharacters = JSON.parse(usedCharacters); } catch(e) { usedCharacters = []; }
+    }
+
+    if (usedCharacters.includes(character_name)) {
+      alert("⚠️ تنبيه: هذه الشخصية تم اللعب بها مسبقاً ولا يمكن استخدامها مرتين لضمان فرادة الجلسات!");
+      return;
+    }
+
+    usedCharacters.push(character_name);
+
+    const endTime = new Date(new Date().getTime() + minutes * 60000).toISOString();
+    const newSessionId = "session_" + Date.now();
+
     const updateData = { 
-      is_active: isActive, 
+      character_name,
+      correct_personality,
+      character_image,
+      character_description,
+      used_chars: usedCharacters,
+      is_active: true, 
       session_id: newSessionId, 
       end_time: endTime,
       auto_next_round: autoNext,
@@ -668,16 +664,36 @@ async function setGameState(isActive) {
     if (error) throw error;
 
     autoNextRoundTriggered = false;
-    statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
+    statusEl.textContent = `✅ تم حفظ الشخصية وفتح الجلسة الجديدة وتشغيل المؤقت لمدة ${minutes} دقائق بنجاح للجميع!`;
     fetchSessionMonitor();
   } catch (err) { 
     console.error(err);
-    statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; 
+    statusEl.textContent = "حدث خطأ أثناء حفظ وحفظ الجلسة."; 
   }
 }
 
-document.getElementById("startTimerBtn").addEventListener("click", () => setGameState(true));
-document.getElementById("stopTimerBtn").addEventListener("click", () => setGameState(false));
+document.getElementById("saveAndStartSessionBtn").addEventListener("click", saveAndStartSession);
+
+// زر الصيانة الجانبي لإيقاف الجلسة فوراً
+async function maintenanceStopSession() {
+  if (!confirm("هل أنت متأكد من إيقاف الجلسة الحالية وإغلاقها لأغراض الصيانة؟")) return;
+  const statusEl = document.getElementById("sessionCharStatus");
+  try {
+    const { error } = await supabaseClient.from("game_session").update({ 
+      is_active: false, 
+      end_time: null, 
+      updated_at: new Date() 
+    }).eq("id", 1);
+
+    if (error) throw error;
+    statusEl.textContent = "⚠️ تم إيقاف الجلسة الحالية للطوارئ والصيانة بنجاح.";
+    fetchSessionMonitor();
+  } catch(e) {
+    statusEl.textContent = "حدث خطأ أثناء عملية إيقاف الصيانة.";
+  }
+}
+
+document.getElementById("maintenanceStopBtn").addEventListener("click", maintenanceStopSession);
 
 async function fetchSessionMonitor() {
   try {
@@ -712,7 +728,7 @@ async function fetchSessionMonitor() {
           badgeEl.textContent = "منتهية";
           countdownEl.textContent = "00:00";
 
-          // ميزة عمل جولة متتالية تلقائياً
+          // ميزة عمل جولة متتالية تلقائياً مع مراعاة عدم التكرار
           if (session.auto_next_round && !autoNextRoundTriggered) {
             autoNextRoundTriggered = true;
             await triggerAutoNextRound();
@@ -737,7 +753,7 @@ async function fetchSessionMonitor() {
   }
 }
 
-// دالة بدء الجولة المتتالية تلقائياً بشخصية جديدة
+// دالة بدء الجولة المتتالية تلقائياً بشخصية جديدة فريدة تماماً
 async function triggerAutoNextRound() {
   try {
     const { data: users } = await supabaseClient.from("users").select("name, personality_type");
@@ -748,7 +764,7 @@ async function triggerAutoNextRound() {
     let usedCharacters = sessionData?.used_chars || [];
     let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
 
-    if (availableUsers.length === 0) return; // نفدت الشخصيات
+    if (availableUsers.length === 0) return; // نفدت جميع الشخصيات الفريدة
 
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
     usedCharacters.push(randomUser.name);
@@ -825,7 +841,6 @@ function renderSessionsTable() {
   }
 
   tbody.innerHTML = paginatedSessions.map(s => {
-    // عرض الوقت المحلي بالساعات والدقائق فقط
     const timeString = s.createdAt ? new Date(s.createdAt).toLocaleTimeString("ar-SA", { hour: '2-digit', minute: '2-digit' }) : "—";
     return `
       <tr>
@@ -861,7 +876,6 @@ async function fetchUsersList() {
   const adminStatusBody = document.getElementById("adminUsersStatusBody");
   
   try {
-    // تحديث نبض السيرفر للاعب الحالي (إن كان أدمن أو مسجلاً) لتصحيح حالة الاتصال
     await supabaseClient.from("users").update({ updated_at: new Date() }).eq("is_admin", true).maybeSingle();
 
     const { data: users, error } = await supabaseClient.from("users").select("*").order("points", { ascending: false });
@@ -893,7 +907,6 @@ function renderAdminUsersStatusTable() {
   const now = new Date().getTime();
   adminStatusBody.innerHTML = paginatedUsers.map(user => {
     const lastActivity = user.updated_at ? new Date(user.updated_at).getTime() : 0;
-    // اعتبار اللاعب متصلاً إذا كان آخر تحديث خلال آخر 3 دقائق (180000 ميللي ثانية)
     const isOnline = (now - lastActivity) < 180000;
     
     return `
@@ -1006,7 +1019,6 @@ fetchUsersList();
 fetchPreviousNews();
 fetchSessionMonitor();
 
-// تحديث حالة الاتصال كل 30 ثانية لتظل دقيقة ومزامنة مع السيرفر
 setInterval(fetchUsersList, 30000);
 </script>
 </body>
