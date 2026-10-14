@@ -59,6 +59,11 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .whatsapp-btn{background:#25d366;color:#fff!important;gap:6px}
 .play-link:hover, .back-home-btn:hover, .whatsapp-btn:hover{transform:scale(1.03)}
 
+/* بطاقة المؤقت الشاملة */
+.session-timer-card{background:var(--card-bg);border-radius:20px;padding:15px 25px;text-align:center;border:2px solid var(--gold);box-shadow:0 6px 20px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;gap:8px}
+.session-timer-title{font-size:clamp(1.1rem,3vw,1.6rem);color:var(--gold);font-weight:800}
+.session-timer-clock{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;color:var(--gold);letter-spacing:3px;background:rgba(0,0,0,0.3);padding:6px 24px;border-radius:14px;box-shadow:inset 0 0 10px rgba(0,0,0,0.5)}
+
 .news-panel{min-height:38vh;border-radius:26px;background:var(--card-bg);padding:2.2vh 3vw 3vh;position:relative;overflow:hidden;box-shadow:inset 0 0 35px rgba(0,0,0,.08)}
 .news-panel:before{content:"";position:absolute;inset:-50% auto -50% -35%;width:35%;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);animation:shine 6s linear infinite;pointer-events:none}
 @keyframes shine{from{left:-40%}to{left:120%}}
@@ -72,7 +77,7 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .news-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
 .news-dots span.active{background:var(--gold);transform:scale(1.25)}
 
-.leader-area{display:grid;grid-template-columns:1fr 1fr;gap:2vw;margin-top:5vh;flex:1}
+.leader-area{display:grid;grid-template-columns:1fr 1fr;gap:2vw;margin-top:2vh;flex:1}
 .leader-card{position:relative;min-width:0;padding:0 1vw 2vh;text-align:center;display:flex;flex-direction:column;align-items:center}
 .leader-card + .leader-card:before{content:"";position:absolute;right:-1vw;top:7vh;bottom:-5vh;width:4px;background:var(--purple);border-radius:5px}
 .pill{width:100%;min-height:66px;border-radius:50% / 50%;border:7px solid #7b7893;outline:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;background:var(--pill-bg);color:var(--gold);font-size:clamp(1rem,3vw,1.8rem);font-weight:800;box-shadow:inset 0 0 0 2px rgba(255,255,255,.04)}
@@ -87,8 +92,8 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .my-rank strong{color:#ffe16a}
 .status{font-size:.8rem;opacity:.8;text-align:center;margin-top:8px}
 
-@media(min-width:800px){.page{max-width:1400px;margin:auto;padding-left:24px;padding-right:24px}.news-panel{min-height:350px}.news-content{min-height:220px}.leader-area{margin-top:35px}}
-@media(max-width:560px){.page{padding:2.5vh 3vw 4vh;gap:2vh}h1{font-size:clamp(1.9rem,7vw,2.8rem)}.topbar{padding:1vh 1vw;gap:10px}.student-id{font-size:clamp(1rem,3.7vw,1.25rem)}.news-panel{min-height:33vh;border-radius:20px;padding:2vh 4vw}.news-content{min-height:22vh}.leader-area{margin-top:4vh;gap:2vw}.pill{min-height:54px;border-width:5px}.description{margin-top:3vh;font-size:clamp(.78rem,2.7vw,.95rem)}.person{grid-template-columns:minmax(0,1fr) auto;padding:10px 6px;font-size:.8rem;gap:3px}.leader-card{padding:0 1vw}.leader-card + .leader-card:before{right:-1vw}}
+@media(min-width:800px){.page{max-width:1400px;margin:auto;padding-left:24px;padding-right:24px}.news-panel{min-height:350px}.news-content{min-height:220px}}
+@media(max-width:560px){.page{padding:2.5vh 3vw 4vh;gap:2vh}h1{font-size:clamp(1.9rem,7vw,2.8rem)}.topbar{padding:1vh 1vw;gap:10px}.student-id{font-size:clamp(1rem,3.7vw,1.25rem)}.news-panel{min-height:33vh;border-radius:20px;padding:2vh 4vw}.news-content{min-height:22vh}.leader-area{margin-top:2vh;gap:2vw}.pill{min-height:54px;border-width:5px}.description{margin-top:3vh;font-size:clamp(.78rem,2.7vw,.95rem)}.person{grid-template-columns:minmax(0,1fr) auto;padding:10px 6px;font-size:.8rem;gap:3px}.leader-card{padding:0 1vw}.leader-card + .leader-card:before{right:-1vw}}
 </style>
 </head>
 <body>
@@ -106,6 +111,12 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
       <a class="whatsapp-btn" href="https://wa.me/249909971373?text=مرحباً%20أدمن%20منصة%20المحلل" target="_blank" rel="noopener">تواصل مع الأدمن 💬</a>
     </div>
   </div>
+
+  <!-- بطاقة مؤقت الجلسة التفاعلي -->
+  <section class="session-timer-card">
+    <div class="session-timer-title" id="timerHeaderTitle">تنتهي الجلسة خلال ⏱️</div>
+    <div class="session-timer-clock" id="sessionTimerDisplay">00:00</div>
+  </section>
 
   <section class="news-panel" aria-label="شاشة الأخبار">
     <h2 class="news-title">شاشة الأخبار</h2>
@@ -143,6 +154,28 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let sessionCountdownInterval = null;
+let hasAlarmPlayed = false;
+
+// دالة تشغيل صوت منبه بصفير ناعم عند انتهاء الوقت
+function playAlarmSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // نغمة صفير A5
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1.2); // استمرار الصوت لمدة ثانية وربع
+  } catch(e) {}
+}
 
 // جعل زر عكس الألوان قابلاً للسحب والتحريك يدوياً في أي مكان على الشاشة
 (function makeButtonDraggable() {
@@ -236,6 +269,58 @@ function escapeText(value) {
   })[ch]);
 }
 
+// ----------------- مزامنة مؤقت الجلسة التفاعلي -----------------
+async function syncSessionTimer() {
+  const timerTitleEl = document.getElementById("timerHeaderTitle");
+  const timerDisplayEl = document.getElementById("sessionTimerDisplay");
+
+  try {
+    const { data: session } = await supabaseClient.from("game_session").select("*").eq("id", 1).maybeSingle();
+
+    if (sessionCountdownInterval) clearInterval(sessionCountdownInterval);
+
+    if (!session || !session.is_active || !session.end_time) {
+      timerTitleEl.textContent = "لا توجد جلسة نشطة حالياً";
+      timerDisplayEl.textContent = "00:00";
+      return;
+    }
+
+    const endTime = new Date(session.end_time).getTime();
+    hasAlarmPlayed = false;
+
+    sessionCountdownInterval = setInterval(() => {
+      const now = new Date().getTime();
+      const diff = endTime - now;
+
+      if (diff <= 0) {
+        clearInterval(sessionCountdownInterval);
+        timerDisplayEl.textContent = "00:00";
+
+        if (session.auto_next_round) {
+          timerTitleEl.textContent = "الجولة التالية تبدأ خلال 🔔";
+          if (!hasAlarmPlayed) {
+            playAlarmSound();
+            hasAlarmPlayed = true;
+          }
+          // إعطاء مهلة قصيرة لإعادة الجلب فور تحويل الأدمن للجولة التالية
+          setTimeout(syncSessionTimer, 4000);
+        } else {
+          timerTitleEl.textContent = "انتهت الجلسة الحالية ⌛";
+        }
+      } else {
+        timerTitleEl.textContent = session.auto_next_round ? "تنتهي الجلسة وتنطلق التالية خلال ⏱️" : "تنتهي الجلسة خلال ⏱️";
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        timerDisplayEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+    }, 1000);
+
+  } catch(e) {
+    timerTitleEl.textContent = "مؤقت الجلسة";
+    timerDisplayEl.textContent = "00:00";
+  }
+}
+
 let newsList = [];
 let newsIndex = 0;
 let newsTimer = null;
@@ -325,6 +410,11 @@ async function fetchStudentAndLeaderboard() {
       .eq("university_id", currentId)
       .maybeSingle();
 
+    if (currentUser) {
+      // تحديث النبض في قاعدة البيانات لضمان ظهور حالة الاتصال كـ "متصل"
+      await supabaseClient.from("users").update({ updated_at: new Date() }).eq("university_id", currentId);
+    }
+
     if (userError || !currentUser) {
       document.getElementById("myName").textContent = "غير موجود بالداتا بيز";
       document.getElementById("myPoints").textContent = "0";
@@ -368,6 +458,10 @@ async function fetchStudentAndLeaderboard() {
 fetchThemeState();
 fetchNews();
 fetchStudentAndLeaderboard();
+syncSessionTimer();
+
+// المزامنة الدورية لمؤقت الجلسة كل 15 ثانية للتأكد من أي تغيير أجراه الأدمن
+setInterval(syncSessionTimer, 15000);
 </script>
 </body>
 </html>
