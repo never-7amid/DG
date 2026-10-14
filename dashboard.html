@@ -25,7 +25,7 @@ body.color-reversed{
 html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
 body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(--text-color);padding:2vh 2vw;transition:background 0.3s ease, color 0.3s ease}
 
-/* زر تبديل الألوان العائم والمتحرك */
+/* زر تبديل الألوان القابل للتحريك والسحب يدوياً */
 .theme-toggle-btn{
   position:fixed;
   bottom:25px;
@@ -37,19 +37,15 @@ body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(
   border-radius:50px;
   padding:12px 22px;
   font-weight:bold;
-  cursor:pointer;
+  cursor:grab;
   box-shadow:0 6px 20px rgba(0,0,0,0.4);
   display:flex;
   align-items:center;
   gap:8px;
-  animation: floatBtn 3s ease-in-out infinite;
-  transition: transform 0.2s ease;
+  user-select:none;
+  touch-action:none;
 }
-.theme-toggle-btn:hover{transform:scale(1.08)}
-@keyframes floatBtn {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
+.theme-toggle-btn:active{cursor:grabbing}
 
 /* القائمة الجانبية (Sidebar) والثلاث شرطات */
 .menu-toggle-btn{background:none;border:2px solid var(--gold);color:var(--gold);font-size:1.5rem;padding:6px 12px;border-radius:10px;cursor:pointer;position:fixed;top:20px;left:20px;z-index:101;background:rgba(0,0,0,0.4);backdrop-filter:blur(5px)}
@@ -109,7 +105,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
 .admin-info-item{font-size:1.1rem;display:flex;justify-content:space-between}
 .admin-info-item span{color:var(--gold);font-weight:bold}
 
-/* تصميم قسم مراقبة الجلسة والوقت المتبقي */
 .session-monitor-card{display:flex;flex-direction:column;gap:15px;background:rgba(0,0,0,0.25);padding:20px;border-radius:18px;border:2px solid var(--gold)}
 .session-timer-badge{font-size:1.8rem;font-weight:800;color:var(--gold);background:rgba(0,0,0,0.3);padding:10px 20px;border-radius:12px;display:inline-block;text-align:center;letter-spacing:2px}
 .active-badge{background:#2ecc71;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.85rem;font-weight:bold}
@@ -226,7 +221,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
     </section>
   </div>
 
-  <!-- 3. المؤقت وحالة اللعبة + مراقبة الجلسة والوقت المتبقي -->
+  <!-- 3. المؤقت وحالة اللعبة -->
   <div id="timerTab" class="tab-content">
     <section class="card">
       <div class="card-title">إدارة المؤقت والوقت التنازلي الموحد</div>
@@ -241,7 +236,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
       <div class="status-msg" id="timerStatus"></div>
     </section>
 
-    <!-- شاشة مراقبة الجلسة الحالية -->
     <section class="card">
       <div class="card-title">📡 مراقبة الجلسة الحالية</div>
       <div class="session-monitor-card">
@@ -257,7 +251,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
       </div>
     </section>
 
-    <!-- سجل الجلسات السابقة والمشاركين -->
     <section class="card">
       <div class="card-title">📊 سجل الجلسات السابقة والمشاركين فيها</div>
       <div class="table-container">
@@ -308,7 +301,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
 
 </main>
 
-<!-- زر تبديل الألوان العائم والمتحرك -->
+<!-- زر تبديل الألوان القابل للتحريك والسحب -->
 <button class="theme-toggle-btn" id="themeToggleBtn">
   🔴 <span>أبيض وأحمر</span>
 </button>
@@ -319,6 +312,75 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let countdownTimerInterval = null;
+
+// جعل زر تبديل الألوان قابلاً للسحب والتحريك يدوياً في أي مكان على الشاشة
+(function makeButtonDraggable() {
+  const btn = document.getElementById("themeToggleBtn");
+  let isDragging = false;
+  let hasDragged = false;
+  let startX, startY, initialLeft, initialTop;
+
+  function onPointerDown(e) {
+    isDragging = true;
+    hasDragged = false;
+    startX = e.clientX || (e.touches && e.touches[0].clientX);
+    startY = e.clientY || (e.touches && e.touches[0].clientY);
+    const rect = btn.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+    
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("touchmove", onPointerMove);
+    document.addEventListener("touchend", onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+    const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+    const deltaX = currentX - startX;
+    const deltaY = currentY - startY;
+
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      hasDragged = true;
+    }
+
+    let newLeft = initialLeft + deltaX;
+    let newTop = initialTop + deltaY;
+
+    // منع الخروج عن حدود الشاشة
+    const maxLeft = window.innerWidth - btn.offsetWidth - 10;
+    const maxTop = window.innerHeight - btn.offsetHeight - 10;
+    newLeft = Math.max(10, Math.min(newLeft, maxLeft));
+    newTop = Math.max(10, Math.min(newTop, maxTop));
+
+    btn.style.left = newLeft + "px";
+    btn.style.top = newTop + "px";
+    btn.style.bottom = "auto";
+    btn.style.right = "auto";
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+    document.removeEventListener("touchmove", onPointerMove);
+    document.removeEventListener("touchend", onPointerUp);
+  }
+
+  btn.addEventListener("pointerdown", onPointerDown);
+  btn.addEventListener("touchstart", onPointerDown, { passive: true });
+
+  btn.addEventListener("click", (e) => {
+    if (hasDragged) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    } else {
+      toggleColorReverse();
+    }
+  });
+})();
 
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
@@ -341,8 +403,6 @@ async function toggleColorReverse() {
     await supabaseClient.from("game_session").upsert({ id: 1, theme_reversed: isReversed, updated_at: new Date() });
   } catch(e) {}
 }
-
-document.getElementById("themeToggleBtn").addEventListener("click", toggleColorReverse);
 
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -544,7 +604,6 @@ async function setGameState(isActive) {
 document.getElementById("startTimerBtn").addEventListener("click", () => setGameState(true));
 document.getElementById("stopTimerBtn").addEventListener("click", () => setGameState(false));
 
-// وظيفة مراقبة الجلسة الحالية وحساب متبقي الوقت
 async function fetchSessionMonitor() {
   try {
     const { data: session } = await supabaseClient.from("game_session").select("*").eq("id", 1).maybeSingle();
@@ -556,7 +615,7 @@ async function fetchSessionMonitor() {
 
     if (!session) {
       badgeEl.className = "inactive-badge";
-      badgeEl.textContent = "غير مفعالة";
+      badgeEl.textContent = "غير مفعلة";
       return;
     }
 
@@ -587,7 +646,7 @@ async function fetchSessionMonitor() {
       }, 1000);
     } else {
       badgeEl.className = "inactive-badge";
-      badgeEl.textContent = "مغلقة مغلقة";
+      badgeEl.textContent = "مغلقة";
       countdownEl.textContent = "00:00";
     }
 
@@ -597,7 +656,6 @@ async function fetchSessionMonitor() {
   }
 }
 
-// عرض السجل والإحصائيات الخاصة بالجلسات والمشاركين فيها
 async function fetchPreviousSessionsLog() {
   const tbody = document.getElementById("previousSessionsBody");
   try {
@@ -609,7 +667,6 @@ async function fetchPreviousSessionsLog() {
       return;
     }
 
-    // تجميع عدد المشاركين لكل session_id
     const stats = {};
     participations.forEach(p => {
       const sid = p.session_id || "جلسة عامة";
