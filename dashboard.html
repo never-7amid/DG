@@ -158,6 +158,12 @@ tr:hover{background:rgba(255,255,255,0.05)}
           </tbody>
         </table>
       </div>
+      <!-- Pagination للاعبين في لوحة الأدمن الرئيسية -->
+      <div class="pagination" id="adminUsersPaginationControls">
+        <button class="page-btn" id="adminUsersPrevBtn">السابق</button>
+        <span id="adminUsersPageIndicator" style="color:var(--gold);font-weight:bold;">الصفحة 1</span>
+        <button class="page-btn" id="adminUsersNextBtn">التالي</button>
+      </div>
     </section>
   </div>
 
@@ -181,6 +187,12 @@ tr:hover{background:rgba(255,255,255,0.05)}
       <div class="card-title">إدارة الأخبار السابقة (تعديل / حذف)</div>
       <div class="news-manage-list" id="newsManageList">
         <div style="text-align:center; opacity:0.8;">جاري تحميل الأخبار...</div>
+      </div>
+      <!-- Pagination للأخبار السابقة -->
+      <div class="pagination" id="newsPaginationControls">
+        <button class="page-btn" id="newsPrevBtn">السابق</button>
+        <span id="newsPageIndicator" style="color:var(--gold);font-weight:bold;">الصفحة 1</span>
+        <button class="page-btn" id="newsNextBtn">التالي</button>
       </div>
     </section>
   </div>
@@ -206,9 +218,9 @@ tr:hover{background:rgba(255,255,255,0.05)}
       </div>
       
       <div class="form-group">
-        <label for="charImageFile">إدراج وتحميل صورة من جهازك (أو رابط خارجي)</label>
+        <label for="charImageFile">إدراج وتحميل صورة من الجهاز</label>
         <input type="file" id="charImageFile" accept="image/*">
-        <input type="text" id="charImage" placeholder="أو أدخل رابط الصورة (URL) مباشرة...">
+        <input type="hidden" id="charImage">
       </div>
 
       <div class="form-group">
@@ -227,8 +239,26 @@ tr:hover{background:rgba(255,255,255,0.05)}
       <div class="card-title">إدارة المؤقت والوقت التنازلي الموحد</div>
       <div class="form-group">
         <label for="timerMinutes">مدة المؤقت (بالدقائق)</label>
-        <input type="number" id="timerMinutes" placeholder="مثال: 3" min="1" value="3">
+        <select id="timerMinutes">
+          <option value="3">3 دقائق</option>
+          <option value="4">4 دقائق</option>
+          <option value="5">5 دقائق</option>
+          <option value="6">6 دقائق</option>
+          <option value="7">7 دقائق</option>
+          <option value="8">8 دقائق</option>
+          <option value="9">9 دقائق</option>
+          <option value="10">10 دقائق</option>
+        </select>
       </div>
+
+      <!-- ميزة الجولات المتتالية -->
+      <div class="form-group" style="background:rgba(0,0,0,0.15); padding:15px; border-radius:12px; border:1px solid var(--gold);">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="autoNextRound" style="width:20px; height:20px; accent-color:var(--gold);">
+          <span>تفعيل ميزة "الجولات المتتالية" (فتح جولة جديدة تلقائياً بشخصية جديدة عند انتهاء الوقت)</span>
+        </label>
+      </div>
+
       <div style="display:flex;gap:15px;margin-top:10px;">
         <button class="btn" style="flex:1;" id="startTimerBtn">فتح الجلسة وتشغيل المؤقت للجميع</button>
         <button class="btn btn-danger" style="flex:1;" id="stopTimerBtn">إيقاف وإغلاق الجلسة فوراً</button>
@@ -260,13 +290,19 @@ tr:hover{background:rgba(255,255,255,0.05)}
               <th>معرّف الجلسة</th>
               <th>اسم الشخصية</th>
               <th>عدد المشاركين</th>
-              <th>تاريخ الإنشاء</th>
+              <th>وقت الإنشاء (ساعات ودقائق)</th>
             </tr>
           </thead>
           <tbody id="previousSessionsBody">
             <tr><td colspan="4" style="text-align:center;">جاري جلب سجل الجلسات...</td></tr>
           </tbody>
         </table>
+      </div>
+      <!-- Pagination لجلسات السجل -->
+      <div class="pagination" id="sessionsPaginationControls">
+        <button class="page-btn" id="sessionsPrevBtn">السابق</button>
+        <span id="sessionsPageIndicator" style="color:var(--gold);font-weight:bold;">الصفحة 1</span>
+        <button class="page-btn" id="sessionsNextBtn">التالي</button>
       </div>
     </section>
   </div>
@@ -312,6 +348,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let countdownTimerInterval = null;
+let autoNextRoundTriggered = false;
 
 // جعل زر تبديل الألوان قابلاً للسحب والتحريك يدوياً في أي مكان على الشاشة
 (function makeButtonDraggable() {
@@ -417,6 +454,11 @@ function escapeText(value) {
   })[ch]);
 }
 
+// ----------------- إدارة الأخبار مع Pagination -----------------
+let allNewsData = [];
+let newsCurrentPage = 1;
+const newsPageSize = 4;
+
 async function publishNews() {
   const title = document.getElementById("newsTitle").value.trim();
   const body = document.getElementById("newsBody").value.trim();
@@ -439,55 +481,77 @@ async function fetchPreviousNews() {
   try {
     const { data: news, error } = await supabaseClient.from("news").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    
-    if (!news || !news.length) {
-      listContainer.innerHTML = '<div style="text-align:center; opacity:0.8;">لا توجد أخبار مسجلة حالياً.</div>';
-      return;
-    }
-
-    listContainer.innerHTML = "";
-    news.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "news-manage-item";
-      
-      const infoDiv = document.createElement("div");
-      infoDiv.className = "news-info";
-      
-      const strong = document.createElement("strong");
-      strong.textContent = item.title || "بدون عنوان";
-      
-      const span = document.createElement("span");
-      span.textContent = item.body || item.content || "";
-      
-      infoDiv.appendChild(strong);
-      infoDiv.appendChild(span);
-      
-      const actionsDiv = document.createElement("div");
-      actionsDiv.className = "news-actions";
-      
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn";
-      editBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
-      editBtn.textContent = "تعديل";
-      editBtn.addEventListener("click", () => editNews(item.id, item.title || "", item.body || item.content || ""));
-      
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "btn btn-danger";
-      deleteBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
-      deleteBtn.textContent = "حذف";
-      deleteBtn.addEventListener("click", () => deleteNews(item.id));
-      
-      actionsDiv.appendChild(editBtn);
-      actionsDiv.appendChild(deleteBtn);
-      
-      div.appendChild(infoDiv);
-      div.appendChild(actionsDiv);
-      listContainer.appendChild(div);
-    });
+    allNewsData = news || [];
+    renderNewsTable();
   } catch (err) {
     listContainer.innerHTML = '<div style="text-align:center; color:#ffcccc;">تعذر تحميل الأخبار السابقة.</div>';
   }
 }
+
+function renderNewsTable() {
+  const listContainer = document.getElementById("newsManageList");
+  const start = (newsCurrentPage - 1) * newsPageSize;
+  const end = start + newsPageSize;
+  const paginatedNews = allNewsData.slice(start, end);
+
+  if (!paginatedNews.length) {
+    listContainer.innerHTML = '<div style="text-align:center; opacity:0.8;">لا توجد أخبار مسجلة حالياً.</div>';
+    document.getElementById("newsPaginationControls").style.display = "none";
+    return;
+  }
+  document.getElementById("newsPaginationControls").style.display = "flex";
+
+  listContainer.innerHTML = "";
+  paginatedNews.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "news-manage-item";
+    
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "news-info";
+    
+    const strong = document.createElement("strong");
+    strong.textContent = item.title || "بدون عنوان";
+    
+    const span = document.createElement("span");
+    span.textContent = item.body || item.content || "";
+    
+    infoDiv.appendChild(strong);
+    infoDiv.appendChild(span);
+    
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "news-actions";
+    
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn";
+    editBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
+    editBtn.textContent = "تعديل";
+    editBtn.addEventListener("click", () => editNews(item.id, item.title || "", item.body || item.content || ""));
+    
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn btn-danger";
+    deleteBtn.style.cssText = "padding:6px 12px;font-size:0.85rem;";
+    deleteBtn.textContent = "حذف";
+    deleteBtn.addEventListener("click", () => deleteNews(item.id));
+    
+    actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(deleteBtn);
+    
+    div.appendChild(infoDiv);
+    div.appendChild(actionsDiv);
+    listContainer.appendChild(div);
+  });
+
+  document.getElementById("newsPageIndicator").textContent = `الصفحة ${newsCurrentPage} من ${Math.ceil(allNewsData.length / newsPageSize) || 1}`;
+  document.getElementById("newsPrevBtn").disabled = newsCurrentPage === 1;
+  document.getElementById("newsNextBtn").disabled = end >= allNewsData.length;
+}
+
+document.getElementById("newsPrevBtn").addEventListener("click", () => {
+  if (newsCurrentPage > 1) { newsCurrentPage--; renderNewsTable(); }
+});
+document.getElementById("newsNextBtn").addEventListener("click", () => {
+  if (newsCurrentPage * newsPageSize < allNewsData.length) { newsCurrentPage++; renderNewsTable(); }
+});
 
 async function deleteNews(id) {
   if (!confirm("هل أنت متأكد من حذف هذا الخبر نهائياً؟")) return;
@@ -513,12 +577,14 @@ async function editNews(id, oldTitle, oldBody) {
   } catch (err) { alert("حدث خطأ أثناء التعديل."); }
 }
 
+// رفع الصور من الجهاز حصرياً
 document.getElementById("charImageFile").addEventListener("change", function(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     document.getElementById("charImage").value = e.target.result;
+    alert("تم تحميل الصورة بنجاح من جهازك!");
   };
   reader.readAsDataURL(file);
 });
@@ -587,19 +653,21 @@ async function setGameState(isActive) {
   const statusEl = document.getElementById("timerStatus");
   const endTime = isActive ? new Date(new Date().getTime() + minutes * 60000).toISOString() : null;
   const newSessionId = "session_" + Date.now();
+  const autoNext = document.getElementById("autoNextRound").checked;
 
   try {
     const updateData = { 
       is_active: isActive, 
       session_id: newSessionId, 
       end_time: endTime,
+      auto_next_round: autoNext,
       updated_at: new Date() 
     };
 
-    // استخدام upsert أو update مع ضمان وجود الصف id = 1
     const { error } = await supabaseClient.from("game_session").upsert({ id: 1, ...updateData });
     if (error) throw error;
 
+    autoNextRoundTriggered = false;
     statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
     fetchSessionMonitor();
   } catch (err) { 
@@ -634,7 +702,7 @@ async function fetchSessionMonitor() {
     if (session.is_active && session.end_time) {
       const endTime = new Date(session.end_time).getTime();
       
-      countdownTimerInterval = setInterval(() => {
+      countdownTimerInterval = setInterval(async () => {
         const now = new Date().getTime();
         const diff = endTime - now;
 
@@ -643,6 +711,12 @@ async function fetchSessionMonitor() {
           badgeEl.className = "inactive-badge";
           badgeEl.textContent = "منتهية";
           countdownEl.textContent = "00:00";
+
+          // ميزة عمل جولة متتالية تلقائياً
+          if (session.auto_next_round && !autoNextRoundTriggered) {
+            autoNextRoundTriggered = true;
+            await triggerAutoNextRound();
+          }
         } else {
           badgeEl.className = "active-badge";
           badgeEl.textContent = "نشطة ومفتوحة";
@@ -663,6 +737,47 @@ async function fetchSessionMonitor() {
   }
 }
 
+// دالة بدء الجولة المتتالية تلقائياً بشخصية جديدة
+async function triggerAutoNextRound() {
+  try {
+    const { data: users } = await supabaseClient.from("users").select("name, personality_type");
+    const { data: sessionData } = await supabaseClient.from("game_session").select("used_chars").eq("id", 1).maybeSingle();
+    
+    if (!users || !users.length) return;
+
+    let usedCharacters = sessionData?.used_chars || [];
+    let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
+
+    if (availableUsers.length === 0) return; // نفدت الشخصيات
+
+    let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+    usedCharacters.push(randomUser.name);
+
+    const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
+    const newEndTime = new Date(new Date().getTime() + minutes * 60000).toISOString();
+    const newSessionId = "session_" + Date.now();
+
+    await supabaseClient.from("game_session").update({
+      character_name: randomUser.name,
+      correct_personality: randomUser.personality_type || "",
+      used_chars: usedCharacters,
+      session_id: newSessionId,
+      end_time: newEndTime,
+      is_active: true,
+      updated_at: new Date()
+    }).eq("id", 1);
+
+    fetchSessionMonitor();
+  } catch(e) {
+    console.error("Auto next round error:", e);
+  }
+}
+
+// ----------------- سجل الجلسات السابقة مع Pagination والتاريخ بالساعات والدقائق -----------------
+let allSessionsData = [];
+let sessionsCurrentPage = 1;
+const sessionsPageSize = 5;
+
 async function fetchPreviousSessionsLog() {
   const tbody = document.getElementById("previousSessionsBody");
   try {
@@ -671,8 +786,10 @@ async function fetchPreviousSessionsLog() {
 
     if (!participations || !participations.length) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد مشاركات مسجلة في الجلسات بعد.</td></tr>';
+      document.getElementById("sessionsPaginationControls").style.display = "none";
       return;
     }
+    document.getElementById("sessionsPaginationControls").style.display = "flex";
 
     const stats = {};
     participations.forEach(p => {
@@ -683,64 +800,127 @@ async function fetchPreviousSessionsLog() {
       stats[sid].count += 1;
     });
 
-    tbody.innerHTML = Object.keys(stats).map(sid => `
-      <tr>
-        <td dir="ltr" style="font-weight:bold; color:var(--gold);">${escapeText(sid)}</td>
-        <td>${currentSession && currentSession.session_id === sid ? escapeText(currentSession.character_name) : 'جلسة سابقة'}</td>
-        <td style="font-weight:bold;">${stats[sid].count} لاعبين</td>
-        <td dir="ltr">${new Date(stats[sid].date).toLocaleDateString("ar-SA")}</td>
-      </tr>
-    `).join("");
+    allSessionsData = Object.keys(stats).map(sid => ({
+      sessionId: sid,
+      charName: currentSession && currentSession.session_id === sid ? currentSession.character_name : 'جلسة سابقة',
+      count: stats[sid].count,
+      createdAt: stats[sid].date
+    }));
 
+    renderSessionsTable();
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">تعذر تحميل سجل الجلسات.</td></tr>';
   }
 }
 
+function renderSessionsTable() {
+  const tbody = document.getElementById("previousSessionsBody");
+  const start = (sessionsCurrentPage - 1) * sessionsPageSize;
+  const end = start + sessionsPageSize;
+  const paginatedSessions = allSessionsData.slice(start, end);
+
+  if (!paginatedSessions.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد سجلات.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = paginatedSessions.map(s => {
+    // عرض الوقت المحلي بالساعات والدقائق فقط
+    const timeString = s.createdAt ? new Date(s.createdAt).toLocaleTimeString("ar-SA", { hour: '2-digit', minute: '2-digit' }) : "—";
+    return `
+      <tr>
+        <td dir="ltr" style="font-weight:bold; color:var(--gold);">${escapeText(s.sessionId)}</td>
+        <td>${escapeText(s.charName)}</td>
+        <td style="font-weight:bold;">${s.count} لاعبين</td>
+        <td dir="ltr" style="font-weight:bold;">${timeString}</td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("sessionsPageIndicator").textContent = `الصفحة ${sessionsCurrentPage} من ${Math.ceil(allSessionsData.length / sessionsPageSize) || 1}`;
+  document.getElementById("sessionsPrevBtn").disabled = sessionsCurrentPage === 1;
+  document.getElementById("sessionsNextBtn").disabled = end >= allSessionsData.length;
+}
+
+document.getElementById("sessionsPrevBtn").addEventListener("click", () => {
+  if (sessionsCurrentPage > 1) { sessionsCurrentPage--; renderSessionsTable(); }
+});
+document.getElementById("sessionsNextBtn").addEventListener("click", () => {
+  if (sessionsCurrentPage * sessionsPageSize < allSessionsData.length) { sessionsCurrentPage++; renderSessionsTable(); }
+});
+
+// ----------------- إدارة اللاعبين وحالة الاتصال مع Pagination -----------------
 let allUsersData = [];
 let currentPage = 1;
 const pageSize = 5;
 
+let adminUsersPage = 1;
+const adminUsersPageSize = 5;
+
 async function fetchUsersList() {
-  const tbody = document.getElementById("usersTableBody");
   const adminStatusBody = document.getElementById("adminUsersStatusBody");
   
   try {
+    // تحديث نبض السيرفر للاعب الحالي (إن كان أدمن أو مسجلاً) لتصحيح حالة الاتصال
+    await supabaseClient.from("users").update({ updated_at: new Date() }).eq("is_admin", true).maybeSingle();
+
     const { data: users, error } = await supabaseClient.from("users").select("*").order("points", { ascending: false });
     if (error) throw error;
     allUsersData = users || [];
     
     document.getElementById("totalPlayersCount").textContent = allUsersData.length;
     
-    if (allUsersData.length === 0) {
-      adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا توجد حسابات مسجلة بعد.</td></tr>';
-    } else {
-      const now = new Date().getTime();
-      adminStatusBody.innerHTML = allUsersData.map(user => {
-        const lastActivity = user.updated_at ? new Date(user.updated_at).getTime() : 0;
-        const isOnline = (now - lastActivity) < 180000;
-        
-        return `
-          <tr>
-            <td>${escapeText(user.name || "—")}</td>
-            <td dir="ltr">${escapeText(user.university_id)}</td>
-            <td>
-              <span class="status-badge">
-                <span class="${isOnline ? 'dot-online' : 'dot-offline'}"></span>
-                ${isOnline ? 'متصل' : 'غير متصل'}
-              </span>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
+    renderAdminUsersStatusTable();
     renderUsersTable();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">تعذر تحميل اللاعبين.</td></tr>';
     adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">تعذر جلب حالات اللاعبين.</td></tr>';
   }
 }
+
+function renderAdminUsersStatusTable() {
+  const adminStatusBody = document.getElementById("adminUsersStatusBody");
+  const start = (adminUsersPage - 1) * adminUsersPageSize;
+  const end = start + adminUsersPageSize;
+  const paginatedUsers = allUsersData.slice(start, end);
+
+  if (!paginatedUsers.length) {
+    adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا توجد حسابات مسجلة بعد.</td></tr>';
+    document.getElementById("adminUsersPaginationControls").style.display = "none";
+    return;
+  }
+  document.getElementById("adminUsersPaginationControls").style.display = "flex";
+
+  const now = new Date().getTime();
+  adminStatusBody.innerHTML = paginatedUsers.map(user => {
+    const lastActivity = user.updated_at ? new Date(user.updated_at).getTime() : 0;
+    // اعتبار اللاعب متصلاً إذا كان آخر تحديث خلال آخر 3 دقائق (180000 ميللي ثانية)
+    const isOnline = (now - lastActivity) < 180000;
+    
+    return `
+      <tr>
+        <td>${escapeText(user.name || "—")}</td>
+        <td dir="ltr">${escapeText(user.university_id)}</td>
+        <td>
+          <span class="status-badge">
+            <span class="${isOnline ? 'dot-online' : 'dot-offline'}"></span>
+            ${isOnline ? 'متصل' : 'غير متصل'}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("adminUsersPageIndicator").textContent = `الصفحة ${adminUsersPage} من ${Math.ceil(allUsersData.length / adminUsersPageSize) || 1}`;
+  document.getElementById("adminUsersPrevBtn").disabled = adminUsersPage === 1;
+  document.getElementById("adminUsersNextBtn").disabled = end >= allUsersData.length;
+}
+
+document.getElementById("adminUsersPrevBtn").addEventListener("click", () => {
+  if (adminUsersPage > 1) { adminUsersPage--; renderAdminUsersStatusTable(); }
+});
+document.getElementById("adminUsersNextBtn").addEventListener("click", () => {
+  if (adminUsersPage * adminUsersPageSize < allUsersData.length) { adminUsersPage++; renderAdminUsersStatusTable(); }
+});
 
 function renderUsersTable() {
   const tbody = document.getElementById("usersTableBody");
@@ -804,17 +984,10 @@ function renderUsersTable() {
 }
 
 document.getElementById("prevBtn").addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderUsersTable();
-  }
+  if (currentPage > 1) { currentPage--; renderUsersTable(); }
 });
-
 document.getElementById("nextBtn").addEventListener("click", () => {
-  if (currentPage * pageSize < allUsersData.length) {
-    currentPage++;
-    renderUsersTable();
-  }
+  if (currentPage * pageSize < allUsersData.length) { currentPage++; renderUsersTable(); }
 });
 
 async function updateUserRow(universityId) {
@@ -832,6 +1005,9 @@ fetchThemeState();
 fetchUsersList();
 fetchPreviousNews();
 fetchSessionMonitor();
+
+// تحديث حالة الاتصال كل 30 ثانية لتظل دقيقة ومزامنة مع السيرفر
+setInterval(fetchUsersList, 30000);
 </script>
 </body>
 </html>
