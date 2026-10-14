@@ -101,7 +101,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
 .news-info strong{color:var(--gold);display:block;margin-bottom:4px}
 .news-actions{display:flex;gap:6px}
 
-/* مؤشرات الاتصال (أخضر / أحمر) */
 .status-badge{display:inline-flex;align-items:center;gap:6px;font-weight:bold;font-size:0.9rem}
 .dot-online{width:10px;height:10px;background:#2ecc71;border-radius:50%;box-shadow:0 0 8px #2ecc71;display:inline-block}
 .dot-offline{width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block}
@@ -109,6 +108,12 @@ tr:hover{background:rgba(255,255,255,0.05)}
 .admin-info-box{display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,0.2);padding:20px;border-radius:16px;border:1px solid var(--gold)}
 .admin-info-item{font-size:1.1rem;display:flex;justify-content:space-between}
 .admin-info-item span{color:var(--gold);font-weight:bold}
+
+/* تصميم قسم مراقبة الجلسة والوقت المتبقي */
+.session-monitor-card{display:flex;flex-direction:column;gap:15px;background:rgba(0,0,0,0.25);padding:20px;border-radius:18px;border:2px solid var(--gold)}
+.session-timer-badge{font-size:1.8rem;font-weight:800;color:var(--gold);background:rgba(0,0,0,0.3);padding:10px 20px;border-radius:12px;display:inline-block;text-align:center;letter-spacing:2px}
+.active-badge{background:#2ecc71;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.85rem;font-weight:bold}
+.inactive-badge{background:#e74c3c;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.85rem;font-weight:bold}
 </style>
 </head>
 <body>
@@ -130,7 +135,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
 <main class="page">
   <h1>لوحة التحكم</h1>
 
-  <!-- 0. لوحة الأدمن الرئيسية (معلومات الأدمن وعدد اللاعبين وحالتهم) -->
+  <!-- 0. لوحة الأدمن الرئيسية -->
   <div id="overviewTab" class="tab-content active">
     <section class="card">
       <div class="card-title">معلومات المشرف (الأدمن)</div>
@@ -185,7 +190,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
     </section>
   </div>
 
-  <!-- 2. مربع الشخصية والنمط مع رفع الصورة والتخصيص اليدوي -->
+  <!-- 2. مربع الشخصية والنمط -->
   <div id="charTab" class="tab-content">
     <section class="card">
       <div class="card-title">تخصيص مربع الشخصية يدوياً والصورة</div>
@@ -221,7 +226,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
     </section>
   </div>
 
-  <!-- 3. المؤقت وحالة اللعبة -->
+  <!-- 3. المؤقت وحالة اللعبة + مراقبة الجلسة والوقت المتبقي -->
   <div id="timerTab" class="tab-content">
     <section class="card">
       <div class="card-title">إدارة المؤقت والوقت التنازلي الموحد</div>
@@ -235,9 +240,45 @@ tr:hover{background:rgba(255,255,255,0.05)}
       </div>
       <div class="status-msg" id="timerStatus"></div>
     </section>
+
+    <!-- شاشة مراقبة الجلسة الحالية -->
+    <section class="card">
+      <div class="card-title">📡 مراقبة الجلسة الحالية</div>
+      <div class="session-monitor-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>حالة الجلسة: <span id="monitorStatusBadge" class="inactive-badge">مغلقة</span></div>
+          <div>معرف الجلسة: <strong id="monitorSessionId" style="color:var(--gold);">—</strong></div>
+        </div>
+        <div>الشخصية المستهدفة: <strong id="monitorCharName" style="color:var(--gold);">—</strong></div>
+        <div style="text-align:center; margin-top:10px;">
+          <div style="font-size:0.95rem; margin-bottom:5px;">الوقت المتبقي للجلسة الحالية:</div>
+          <div class="session-timer-badge" id="monitorCountdown">00:00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- سجل الجلسات السابقة والمشاركين -->
+    <section class="card">
+      <div class="card-title">📊 سجل الجلسات السابقة والمشاركين فيها</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>معرّف الجلسة</th>
+              <th>اسم الشخصية</th>
+              <th>عدد المشاركين</th>
+              <th>تاريخ الإنشاء</th>
+            </tr>
+          </thead>
+          <tbody id="previousSessionsBody">
+            <tr><td colspan="4" style="text-align:center;">جاري جلب سجل الجلسات...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- 4. إدارة اللاعبين والنقاط (مع Pagination) -->
+  <!-- 4. إدارة اللاعبين والنقاط -->
   <div id="usersTab" class="tab-content">
     <section class="card">
       <div class="card-title">إدارة اللاعبين المسجلين والنقاط</div>
@@ -277,13 +318,13 @@ const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// التحكم بالقائمة الجانبية (Sidebar)
+let countdownTimerInterval = null;
+
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
   document.getElementById("sidebarOverlay").classList.toggle("show");
 }
 
-// مزامنة حالة الألوان عبر Supabase (بدلاً من LocalStorage)
 async function fetchThemeState() {
   try {
     const { data } = await supabaseClient.from("game_session").select("theme_reversed").eq("id", 1).maybeSingle();
@@ -317,7 +358,6 @@ function escapeText(value) {
   })[ch]);
 }
 
-// نشر وجلب وإدارة الأخبار السابقة
 async function publishNews() {
   const title = document.getElementById("newsTitle").value.trim();
   const body = document.getElementById("newsBody").value.trim();
@@ -424,7 +464,6 @@ document.getElementById("charImageFile").addEventListener("change", function(eve
   reader.readAsDataURL(file);
 });
 
-// العجلة بدون تكرار مخزنة عبر Supabase
 async function spinWheel() {
   const wheelResultEl = document.getElementById("wheelResult");
   try {
@@ -473,6 +512,7 @@ async function updateCharacter() {
 
     if (error) throw error;
     statusEl.textContent = "تم حفظ وتحديث مربع الشخصية بنجاح للجميع!";
+    fetchSessionMonitor();
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء التحديث."; }
 }
 
@@ -497,11 +537,101 @@ async function setGameState(isActive) {
     if (error) throw error;
 
     statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
+    fetchSessionMonitor();
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; }
 }
 
 document.getElementById("startTimerBtn").addEventListener("click", () => setGameState(true));
 document.getElementById("stopTimerBtn").addEventListener("click", () => setGameState(false));
+
+// وظيفة مراقبة الجلسة الحالية وحساب متبقي الوقت
+async function fetchSessionMonitor() {
+  try {
+    const { data: session } = await supabaseClient.from("game_session").select("*").eq("id", 1).maybeSingle();
+    
+    const badgeEl = document.getElementById("monitorStatusBadge");
+    const sessionEl = document.getElementById("monitorSessionId");
+    const charEl = document.getElementById("monitorCharName");
+    const countdownEl = document.getElementById("monitorCountdown");
+
+    if (!session) {
+      badgeEl.className = "inactive-badge";
+      badgeEl.textContent = "غير مفعالة";
+      return;
+    }
+
+    sessionEl.textContent = session.session_id || "—";
+    charEl.textContent = session.character_name || "—";
+
+    if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+
+    if (session.is_active && session.end_time) {
+      const endTime = new Date(session.end_time).getTime();
+      
+      countdownTimerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+          clearInterval(countdownTimerInterval);
+          badgeEl.className = "inactive-badge";
+          badgeEl.textContent = "منتهية";
+          countdownEl.textContent = "00:00";
+        } else {
+          badgeEl.className = "active-badge";
+          badgeEl.textContent = "نشطة ومفتوحة";
+          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const s = Math.floor((diff % (1000 * 60)) / 1000);
+          countdownEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+      }, 1000);
+    } else {
+      badgeEl.className = "inactive-badge";
+      badgeEl.textContent = "مغلقة مغلقة";
+      countdownEl.textContent = "00:00";
+    }
+
+    fetchPreviousSessionsLog();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// عرض السجل والإحصائيات الخاصة بالجلسات والمشاركين فيها
+async function fetchPreviousSessionsLog() {
+  const tbody = document.getElementById("previousSessionsBody");
+  try {
+    const { data: participations } = await supabaseClient.from("game_participations").select("session_id, university_id, created_at");
+    const { data: currentSession } = await supabaseClient.from("game_session").select("*").eq("id", 1).maybeSingle();
+
+    if (!participations || !participations.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد مشاركات مسجلة في الجلسات بعد.</td></tr>';
+      return;
+    }
+
+    // تجميع عدد المشاركين لكل session_id
+    const stats = {};
+    participations.forEach(p => {
+      const sid = p.session_id || "جلسة عامة";
+      if (!stats[sid]) {
+        stats[sid] = { count: 0, date: p.created_at };
+      }
+      stats[sid].count += 1;
+    });
+
+    tbody.innerHTML = Object.keys(stats).map(sid => `
+      <tr>
+        <td dir="ltr" style="font-weight:bold; color:var(--gold);">${escapeText(sid)}</td>
+        <td>${currentSession && currentSession.session_id === sid ? escapeText(currentSession.character_name) : 'جلسة سابقة'}</td>
+        <td style="font-weight:bold;">${stats[sid].count} لاعبين</td>
+        <td dir="ltr">${new Date(stats[sid].date).toLocaleDateString("ar-SA")}</td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">تعذر تحميل سجل الجلسات.</td></tr>';
+  }
+}
 
 let allUsersData = [];
 let currentPage = 1;
@@ -516,16 +646,13 @@ async function fetchUsersList() {
     if (error) throw error;
     allUsersData = users || [];
     
-    // تحديث إجمالي اللاعبين في لوحة الأدمن الرئيسية
     document.getElementById("totalPlayersCount").textContent = allUsersData.length;
     
-    // عرض جدول اللاعبين وحالتهم (متصل / غير متصل)
     if (allUsersData.length === 0) {
       adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا توجد حسابات مسجلة بعد.</td></tr>';
     } else {
       const now = new Date().getTime();
       adminStatusBody.innerHTML = allUsersData.map(user => {
-        // يعتبر اللاعب متصلاً إذا تم تحديث بياناته خلال آخر 3 دقائق (180000ms) أو كتقدير افتراضي
         const lastActivity = user.updated_at ? new Date(user.updated_at).getTime() : 0;
         const isOnline = (now - lastActivity) < 180000;
         
@@ -640,6 +767,7 @@ async function updateUserRow(universityId) {
 fetchThemeState();
 fetchUsersList();
 fetchPreviousNews();
+fetchSessionMonitor();
 </script>
 </body>
 </html>
