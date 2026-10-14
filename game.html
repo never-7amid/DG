@@ -15,13 +15,11 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 
 .game-container{display:grid;grid-template-columns:1fr 1fr;gap:2vw;flex:1;align-items:start}
 
-/* مربع الشخصية على اليسار (يتم التحكم به يدوياً من الأدمن) */
 .character-box{background:linear-gradient(120deg,#3e005e,#33008b 65%,#3b00a3);border-radius:26px;padding:2.5vh 2vw;min-height:42vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:inset 0 0 35px rgba(0,0,0,.08);position:relative;overflow:hidden}
 .character-box img{max-width:100%;max-height:22vh;object-fit:contain;border-radius:12px;margin-bottom:12px}
 .character-title{color:var(--gold);font-size:clamp(1.4rem,3.5vw,2.2rem);font-weight:800;margin-bottom:8px}
 .character-desc{font-size:clamp(0.9rem,2.2vw,1.3rem);line-height:1.6;white-space:pre-wrap}
 
-/* مساحة اللعب على اليمين (الصناديق الأربعة) */
 .options-area{display:flex;flex-direction:column;gap:12px;max-height:55vh;overflow-y:auto;padding-left:5px}
 .category-card{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:10px 14px}
 .category-title{color:var(--gold);font-size:clamp(0.85rem,2vw,1.1rem);font-weight:700;margin-bottom:8px;text-align:right}
@@ -29,10 +27,14 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .option-box{background:#110c20;border:2px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s ease}
 .option-box:hover{border-color:var(--gold);background:#1a1230}
 .option-box.selected{border-color:var(--gold);background:var(--purple2);box-shadow:0 0 10px rgba(198,163,0,0.5)}
+
+/* تلوين الخيارات عند التأكيد */
+.option-box.correct-choice{border-color:#2ecc71 !important;background:rgba(46, 204, 113, 0.25) !important;box-shadow:0 0 12px rgba(46, 204, 113, 0.6)}
+.option-box.wrong-choice{border-color:#e74c3c !important;background:rgba(231, 76, 60, 0.25) !important;box-shadow:0 0 12px rgba(231, 76, 60, 0.6)}
+
 .option-letter{color:var(--gold);font-size:clamp(1.1rem,2.8vw,1.5rem);font-weight:800;display:block}
 .option-desc{font-size:clamp(0.7rem,1.7vw,0.9rem);color:#fff;opacity:0.85;margin-top:2px}
 
-/* أزرار التحكم وقسم المؤقت */
 .bottom-actions{display:flex;flex-direction:column;align-items:center;gap:15px;margin-top:1vh}
 .confirm-btn{background:linear-gradient(110deg,#344b66,#a69ab7);color:var(--gold);border:2px solid var(--gold);border-radius:16px;padding:12px 35px;font-size:clamp(1.1rem,3vw,1.5rem);font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:transform 0.2s ease}
 .confirm-btn:hover{transform:scale(1.03)}
@@ -42,7 +44,6 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
 .timer-icon{font-size:1.3rem}
 .timer-text{color:var(--gold);font-size:clamp(1.3rem,3.5vw,1.8rem);font-weight:800;letter-spacing:2px}
 
-/* نافذة التحذير */
 .overlay-modal{position:fixed;inset:0;background:rgba(5,4,10,0.85);display:flex;align-items:center;justify-content:center;z-index:999;visibility:hidden;opacity:0;transition:all 0.3s ease}
 .overlay-modal.show{visibility:visible;opacity:1}
 .modal-content{background:linear-gradient(120deg,#3e005e,#33008b);border:3px solid var(--gold);padding:30px 40px;border-radius:24px;text-align:center;max-width:450px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
@@ -60,52 +61,46 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
   <h1>شاشة اللعب</h1>
   
   <div class="game-container">
-    <!-- مربع الشخصية على اليسار -->
     <section class="character-box" id="characterBox">
       <div class="character-title" id="charTitle">جاري تحميل الشخصية...</div>
       <div id="charMedia"></div>
       <div class="character-desc" id="charDesc"></div>
     </section>
 
-    <!-- مساحة اللعب على اليمين (الصناديق الأربعة) -->
     <section class="options-area" id="optionsArea">
-      <!-- 1. مصدر الطاقة -->
-      <div class="category-card">
+      <div class="category-card" data-category="energy">
         <div class="category-title">1. مصدر الطاقة</div>
         <div class="options-grid">
-          <div class="option-box" onclick="selectOption(this, 'energy', 'I')"><span class="option-letter">I</span><div class="option-desc">هادئ ويميل للخصوصية</div></div>
-          <div class="option-box" onclick="selectOption(this, 'energy', 'E')"><span class="option-letter">E</span><div class="option-desc">اجتماعي وتفاعلي</div></div>
+          <div class="option-box" data-letter="I" onclick="selectOption(this, 'energy', 'I')"><span class="option-letter">I</span><div class="option-desc">هادئ ويميل للخصوصية</div></div>
+          <div class="option-box" data-letter="E" onclick="selectOption(this, 'energy', 'E')"><span class="option-letter">E</span><div class="option-desc">اجتماعي وتفاعلي</div></div>
         </div>
       </div>
-      <!-- 2. طريقة استقبال المعلومات -->
-      <div class="category-card">
+      <div class="category-card" data-category="info">
         <div class="category-title">2. طريقة استقبال المعلومات</div>
         <div class="options-grid">
-          <div class="option-box" onclick="selectOption(this, 'info', 'N')"><span class="option-letter">N</span><div class="option-desc">حدسي ويركز على الاحتمالات</div></div>
-          <div class="option-box" onclick="selectOption(this, 'info', 'S')"><span class="option-letter">S</span><div class="option-desc">واقعي ويلاحظ التفاصيل</div></div>
+          <div class="option-box" data-letter="N" onclick="selectOption(this, 'info', 'N')"><span class="option-letter">N</span><div class="option-desc">حدسي ويركز على الاحتمالات</div></div>
+          <div class="option-box" data-letter="S" onclick="selectOption(this, 'info', 'S')"><span class="option-letter">S</span><div class="option-desc">واقعي ويلاحظ التفاصيل</div></div>
         </div>
       </div>
-      <!-- 3. طريقة اتخاذ القرار -->
-      <div class="category-card">
+      <div class="category-card" data-category="decision">
         <div class="category-title">3. طريقة اتخاذ القرار</div>
         <div class="options-grid">
-          <div class="option-box" onclick="selectOption(this, 'decision', 'F')"><span class="option-letter">F</span><div class="option-desc">يراعي القيم والمشاعر</div></div>
-          <div class="option-box" onclick="selectOption(this, 'decision', 'T')"><span class="option-letter">T</span><div class="option-desc">منطقي وتحليلي</div></div>
+          <div class="option-box" data-letter="F" onclick="selectOption(this, 'decision', 'F')"><span class="option-letter">F</span><div class="option-desc">يراعي القيم والمشاعر</div></div>
+          <div class="option-box" data-letter="T" onclick="selectOption(this, 'decision', 'T')"><span class="option-letter">T</span><div class="option-desc">منطقي وتحليلي</div></div>
         </div>
       </div>
-      <!-- 4. أسلوب التعامل مع الحياة -->
-      <div class="category-card">
+      <div class="category-card" data-category="lifestyle">
         <div class="category-title">4. أسلوب التعامل مع الحياة</div>
         <div class="options-grid">
-          <div class="option-box" onclick="selectOption(this, 'lifestyle', 'P')"><span class="option-letter">P</span><div class="option-desc">مرن ويحب الاستكشاف</div></div>
-          <div class="option-box" onclick="selectOption(this, 'lifestyle', 'J')"><span class="option-letter">J</span><div class="option-desc">منظّم ويحب الحسم</div></div>
+          <div class="option-box" data-letter="P" onclick="selectOption(this, 'lifestyle', 'P')"><span class="option-letter">P</span><div class="option-desc">مرن ويحب الاستكشاف</div></div>
+          <div class="option-box" data-letter="J" onclick="selectOption(this, 'lifestyle', 'J')"><span class="option-letter">J</span><div class="option-desc">منظّم ويحب الحسم</div></div>
         </div>
       </div>
     </section>
   </div>
 
   <div class="bottom-actions">
-    <button class="confirm-btn" onclick="confirmAnswer()">تأكيد الإجابة</button>
+    <button class="confirm-btn" id="confirmBtn" onclick="confirmAnswer()">تأكيد الإجابة</button>
     <div class="timer-section">
       <div class="timer-display">
         <span class="timer-icon">⏱️</span>
@@ -115,11 +110,10 @@ h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,6.4vw,4.4re
   </div>
 </main>
 
-<!-- نافذة التحذير -->
 <div class="overlay-modal" id="stopModal">
   <div class="modal-content">
     <div class="modal-title" id="modalTitle">تنبيه</div>
-    <div class="modal-text" id="modalText">اللعبة متوقفة الان من قبل الادمن</div>
+    <div class="modal-text" id="modalText">الجلسة مغلقة من قبل الادمن</div>
     <button class="confirm-btn" onclick="redirectToMain()">العودة للرئيسية</button>
   </div>
 </div>
@@ -129,13 +123,13 @@ const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const CURRENT_USER_KEY = "analyzer_current_user";
-const currentId = localStorage.getItem(CURRENT_USER_KEY) || sessionStorage.getItem(CURRENT_USER_KEY) || "";
-
+const currentId = localStorage.getItem("analyzer_current_user") || "";
 let userSelections = { energy: "", info: "", decision: "", lifestyle: "" };
 let currentGameData = null;
+let isAnswerSubmitted = false;
 
 function selectOption(element, category, letter) {
+  if (isAnswerSubmitted) return;
   const parent = element.parentElement;
   parent.querySelectorAll('.option-box').forEach(box => box.classList.remove('selected'));
   element.classList.add('selected');
@@ -166,15 +160,27 @@ async function fetchGameSettings() {
       .single();
       
     if (error || !charData || charData.is_active === false) {
-      showModal("تنبيه", "اللعبة متوقفة الان من قبل الادمن");
+      showModal("تنبيه", "الجلسة مغلقة من قبل الادمن");
+      return;
+    }
+
+    if (charData.end_time && new Date(charData.end_time).getTime() <= new Date().getTime()) {
+      showModal("تنبيه", "الجلسة انتهت");
       return;
     }
 
     currentGameData = charData;
+    const currentSessionId = charData.session_id || charData.updated_at || 'default_session';
 
-    // منع تكرار دخول اللاعب إذا شارك مسبقاً في هذه الجلسة
-    const sessionTokenKey = `played_session_${charData.updated_at || 'default'}`;
-    if (localStorage.getItem(sessionTokenKey) === currentId) {
+    // التحقق عبر قاعدة البيانات (Supabase) عما إذا كان اللاعب قد شارك في هذه الجلسة مسبقاً
+    const { data: participation } = await supabaseClient
+      .from("game_participations")
+      .select("id")
+      .eq("university_id", currentId)
+      .eq("session_id", String(currentSessionId))
+      .maybeSingle();
+
+    if (participation) {
       showModal("عذراً", "لقد قمت بالمشاركة في هذه الجلسة مسبقاً ولا يمكنك الدخول مرة أخرى.");
       return;
     }
@@ -194,6 +200,8 @@ async function fetchGameSettings() {
 }
 
 async function confirmAnswer() {
+  if (isAnswerSubmitted) return;
+
   const code = (userSelections.energy + userSelections.info + userSelections.decision + userSelections.lifestyle).toUpperCase();
   if (code.length < 4) {
     alert("يرجى اختيار حرف واحد من كل فئة (إجمالي 4 أحرف) قبل التأكيد.");
@@ -205,22 +213,45 @@ async function confirmAnswer() {
     return;
   }
 
-  // قفل الجلسة فوراً لمنع العودة وتكرار المشاركة
-  const sessionTokenKey = `played_session_${currentGameData.updated_at || 'default'}`;
-  localStorage.setItem(sessionTokenKey, currentId);
+  isAnswerSubmitted = true;
+  document.getElementById("confirmBtn").disabled = true;
 
   const targetPersonality = currentGameData.correct_personality.toUpperCase();
   let correctCount = 0;
-  for (let i = 0; i < 4; i++) {
-    if (code[i] === targetPersonality[i]) {
+
+  // مطابقة الإجابات وتلوين الخيارات (أخضر للأصح، أحمر للخطأ)
+  const categories = ['energy', 'info', 'decision', 'lifestyle'];
+  categories.forEach((cat, idx) => {
+    const card = document.querySelector(`.category-card[data-category="${cat}"]`);
+    if (card) {
+      const boxes = card.querySelectorAll('.option-box');
+      boxes.forEach(box => {
+        const letter = box.getAttribute('data-letter');
+        if (letter === targetPersonality[idx]) {
+          box.classList.add('correct-choice');
+        } else if (userSelections[cat] === letter && letter !== targetPersonality[idx]) {
+          box.classList.add('wrong-choice');
+        }
+      });
+    }
+
+    if (code[idx] === targetPersonality[idx]) {
       correctCount++;
     }
-  }
-  
-  const earnedPoints = correctCount; // نقطة لكل إجابة صحيحة
+  });
+
+  const earnedPoints = correctCount;
+  const currentSessionId = currentGameData.session_id || currentGameData.updated_at || 'default_session';
 
   try {
-    // جلب النقاط الحالية للاعب فقط
+    // تسجيل المشاركة في الداتا بيز لمنع التكرار لنفس الجلسة
+    const { error: partError } = await supabaseClient
+      .from("game_participations")
+      .insert([{ university_id: currentId, session_id: String(currentSessionId) }]);
+
+    if (partError) throw partError;
+
+    // جلب وتحديث نقاط اللاعب في الداتا بيز
     const { data: userData } = await supabaseClient
       .from("users")
       .select("points")
@@ -230,21 +261,22 @@ async function confirmAnswer() {
     const currentPoints = userData ? (userData.points || 0) : 0;
     const newTotalPoints = currentPoints + earnedPoints;
 
-    // تحديث النقاط فقط في الداتا بيز دون المساس بنمط اللاعب الشخصي الأصلي
     const { error } = await supabaseClient
       .from("users")
-      .update({ 
-        points: newTotalPoints 
-      })
+      .update({ points: newTotalPoints })
       .eq("university_id", currentId);
 
     if (error) throw error;
 
-    alert(`تم تأكيد الإجابة بنجاح!\nأصبت في ${correctCount} من 4 أحرف.\nتمت إضافة ${earnedPoints} نقطة إلى رصيدك.`);
-    window.location.href = "main.html";
+    setTimeout(() => {
+      alert(`تم تأكيد الإجابة بنجاح!\nأصبت في ${correctCount} من 4 أحرف.\nتمت إضافة ${earnedPoints} نقطة إلى رصيدك.`);
+      window.location.href = "main.html";
+    }, 1500);
+
   } catch (err) {
     console.error(err);
-    alert("حدث خطأ أثناء حفظ النقاط.");
+    alert("حدث خطأ أثناء حفظ النقاط أو أنك شاركت في هذه الجلسة مسبقاً.");
+    setTimeout(() => window.location.href = "main.html", 2000);
   }
 }
 
@@ -260,7 +292,7 @@ function startCountdown(endTimeMs) {
         
       if (checkData && checkData.is_active === false) {
         clearInterval(interval);
-        showModal("تنبيه", "اللعبة متوقفة الان من قبل الادمن");
+        showModal("تنبيه", "الجلسة مغلقة من قبل الادمن");
         return;
       }
     } catch(e) {}
@@ -271,10 +303,8 @@ function startCountdown(endTimeMs) {
     if (distance <= 0) {
       clearInterval(interval);
       timerClock.textContent = "00:00";
-      if (currentGameData) {
-        localStorage.setItem(`played_session_${currentGameData.updated_at || 'default'}`, currentId);
-      }
-      window.location.href = "main.html";
+      showModal("تنبيه", "الجلسة انتهت");
+      setTimeout(() => window.location.href = "main.html", 2000);
       return;
     }
     
