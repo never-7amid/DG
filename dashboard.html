@@ -349,7 +349,6 @@ let countdownTimerInterval = null;
     let newLeft = initialLeft + deltaX;
     let newTop = initialTop + deltaY;
 
-    // منع الخروج عن حدود الشاشة
     const maxLeft = window.innerWidth - btn.offsetWidth - 10;
     const maxTop = window.innerHeight - btn.offsetHeight - 10;
     newLeft = Math.max(10, Math.min(newLeft, maxLeft));
@@ -400,7 +399,7 @@ async function toggleColorReverse() {
   document.body.classList.toggle("color-reversed");
   const isReversed = document.body.classList.contains("color-reversed");
   try {
-    await supabaseClient.from("game_session").upsert({ id: 1, theme_reversed: isReversed, updated_at: new Date() });
+    await supabaseClient.from("game_session").update({ theme_reversed: isReversed, updated_at: new Date() }).eq("id", 1);
   } catch(e) {}
 }
 
@@ -524,6 +523,7 @@ document.getElementById("charImageFile").addEventListener("change", function(eve
   reader.readAsDataURL(file);
 });
 
+// العجلة تعتمد 100% على جدول game_session وتخزين used_chars في Supabase
 async function spinWheel() {
   const wheelResultEl = document.getElementById("wheelResult");
   try {
@@ -536,6 +536,10 @@ async function spinWheel() {
     }
 
     let usedCharacters = sessionData?.used_chars || [];
+    if (!Array.isArray(usedCharacters)) {
+      try { usedCharacters = JSON.parse(usedCharacters); } catch(e) { usedCharacters = []; }
+    }
+
     let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
 
     if (availableUsers.length === 0) {
@@ -546,7 +550,8 @@ async function spinWheel() {
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
     usedCharacters.push(randomUser.name);
     
-    await supabaseClient.from("game_session").upsert({ id: 1, used_chars: usedCharacters, updated_at: new Date() });
+    // حفظ قائمة الشخصيات المستخدمة مباشرة في قاعدة بيانات Supabase
+    await supabaseClient.from("game_session").update({ used_chars: usedCharacters, updated_at: new Date() }).eq("id", 1);
 
     document.getElementById("charName").value = randomUser.name;
     document.getElementById("correctPersonality").value = randomUser.personality_type || "";
@@ -568,7 +573,8 @@ async function updateCharacter() {
   try {
     const { error } = await supabaseClient
       .from("game_session")
-      .upsert({ id: 1, character_name, correct_personality, character_image, character_description, updated_at: new Date() });
+      .update({ character_name, correct_personality, character_image, character_description, updated_at: new Date() })
+      .eq("id", 1);
 
     if (error) throw error;
     statusEl.textContent = "تم حفظ وتحديث مربع الشخصية بنجاح للجميع!";
@@ -586,14 +592,14 @@ async function setGameState(isActive) {
 
   try {
     const updateData = { 
-      id: 1, 
       is_active: isActive, 
       session_id: newSessionId, 
       updated_at: new Date() 
     };
     if (isActive) updateData.end_time = endTime;
+    else updateData.end_time = null;
 
-    const { error } = await supabaseClient.from("game_session").upsert(updateData);
+    const { error } = await supabaseClient.from("game_session").update(updateData).eq("id", 1);
     if (error) throw error;
 
     statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
