@@ -25,16 +25,44 @@ body.color-reversed{
 html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif}
 body{min-height:100vh;min-height:100dvh;background:var(--bg-gradient);color:var(--text-color);padding:2vh 2vw;transition:background 0.3s ease, color 0.3s ease}
 
-/* زر تبديل الألوان العائم */
-.theme-toggle-btn{position:fixed;bottom:20px;left:20px;z-index:99;background:var(--gold);color:#fff;border:0;border-radius:50px;padding:12px 20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px}
+/* زر تبديل الألوان العائم والمتحرك */
+.theme-toggle-btn{
+  position:fixed;
+  bottom:25px;
+  left:25px;
+  z-index:100;
+  background:var(--gold);
+  color:#fff;
+  border:0;
+  border-radius:50px;
+  padding:12px 22px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  animation: floatBtn 3s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+.theme-toggle-btn:hover{transform:scale(1.08)}
+@keyframes floatBtn {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
 
-.page{max-width:1300px;margin:auto;display:flex;flex-direction:column;gap:2.5vh}
+/* القائمة الجانبية (Sidebar) والثلاث شرطات */
+.menu-toggle-btn{background:none;border:2px solid var(--gold);color:var(--gold);font-size:1.5rem;padding:6px 12px;border-radius:10px;cursor:pointer;position:fixed;top:20px;left:20px;z-index:101;background:rgba(0,0,0,0.4);backdrop-filter:blur(5px)}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--card-bg);box-shadow:5px 0 25px rgba(0,0,0,0.5);z-index:102;transition:left 0.3s ease;display:flex;flex-direction:column;padding:80px 20px 20px;gap:15px;border-left:2px solid var(--gold)}
+.sidebar.open{left:0}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:101;display:none}
+.sidebar-overlay.show{display:block}
+.sidebar-btn{background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);color:var(--text-color);padding:14px;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;text-align:right;transition:all 0.2s ease}
+.sidebar-btn.active, .sidebar-btn:hover{background:var(--purple2);border-color:var(--gold);color:var(--gold);transform:translateX(-5px)}
+
+.page{max-width:1300px;margin:auto;display:flex;flex-direction:column;gap:2.5vh;padding-top:20px}
 h1{margin:0;text-align:center;color:var(--gold);font-size:clamp(2rem,5vw,3.5rem);font-weight:800}
 
-/* أشرطة التبويب (Tabs) */
-.tabs-nav{display:flex;justify-content:center;gap:15px;margin-bottom:1vh;flex-wrap:wrap}
-.tab-btn{background:rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.15);color:#fff;padding:12px 24px;border-radius:14px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s ease}
-.tab-btn.active{background:var(--purple2);border-color:var(--gold);color:var(--white);box-shadow:0 0 15px rgba(217,4,41,0.4)}
 .tab-content{display:none}
 .tab-content.active{display:flex;flex-direction:column;gap:2vh}
 
@@ -67,27 +95,74 @@ tr:hover{background:rgba(255,255,255,0.05)}
 .page-btn{padding:8px 16px;background:rgba(0,0,0,0.2);border:1px solid var(--gold);color:var(--gold);border-radius:8px;cursor:pointer;font-weight:bold}
 .page-btn:disabled{opacity:0.4;cursor:not-allowed}
 
-/* قائمة الأخبار السابقة في لوحة التحكم */
 .news-manage-list{display:flex;flex-direction:column;gap:12px;max-height:350px;overflow-y:auto;margin-top:10px}
 .news-manage-item{background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.1);padding:12px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .news-info{flex:1}
 .news-info strong{color:var(--gold);display:block;margin-bottom:4px}
 .news-actions{display:flex;gap:6px}
+
+/* مؤشرات الاتصال (أخضر / أحمر) */
+.status-badge{display:inline-flex;align-items:center;gap:6px;font-weight:bold;font-size:0.9rem}
+.dot-online{width:10px;height:10px;background:#2ecc71;border-radius:50%;box-shadow:0 0 8px #2ecc71;display:inline-block}
+.dot-offline{width:10px;height:10px;background:#e74c3c;border-radius:50%;display:inline-block}
+
+.admin-info-box{display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,0.2);padding:20px;border-radius:16px;border:1px solid var(--gold)}
+.admin-info-item{font-size:1.1rem;display:flex;justify-content:space-between}
+.admin-info-item span{color:var(--gold);font-weight:bold}
 </style>
 </head>
 <body>
+
+<!-- زر القائمة الجانبية (ثلاث شرطات) -->
+<button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
+
+<!-- القائمة الجانبية المنزلقة -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div style="color:var(--gold); font-size:1.4rem; font-weight:bold; text-align:center; margin-bottom:10px;">لوحة تحكم الأدمن</div>
+  <button class="sidebar-btn active" onclick="switchTab('overviewTab', this)">🏠 لوحة الأدمن الرئيسية</button>
+  <button class="sidebar-btn" onclick="switchTab('newsTab', this)">📰 شاشة الأخبار</button>
+  <button class="sidebar-btn" onclick="switchTab('charTab', this)">👤 مربع الشخصية والنمط</button>
+  <button class="sidebar-btn" onclick="switchTab('timerTab', this)">⏱️ المؤقت وحالة اللعبة</button>
+  <button class="sidebar-btn" onclick="switchTab('usersTab', this)">👥 إدارة اللاعبين والنقاط</button>
+</nav>
+
 <main class="page">
   <h1>لوحة التحكم</h1>
 
-  <nav class="tabs-nav">
-    <button class="tab-btn active" onclick="switchTab('newsTab', this)">شاشة الأخبار</button>
-    <button class="tab-btn" onclick="switchTab('charTab', this)">مربع الشخصية والنمط</button>
-    <button class="tab-btn" onclick="switchTab('timerTab', this)">المؤقت وحالة اللعبة</button>
-    <button class="tab-btn" onclick="switchTab('usersTab', this)">إدارة اللاعبين والنقاط</button>
-  </nav>
+  <!-- 0. لوحة الأدمن الرئيسية (معلومات الأدمن وعدد اللاعبين وحالتهم) -->
+  <div id="overviewTab" class="tab-content active">
+    <section class="card">
+      <div class="card-title">معلومات المشرف (الأدمن)</div>
+      <div class="admin-info-box">
+        <div class="admin-info-item">اسم المشرف: <span>أدمن منصة المحلل</span></div>
+        <div class="admin-info-item">الصلاحية: <span>إدارة كاملة (System Administrator)</span></div>
+        <div class="admin-info-item">حالة النظام: <span style="color:#2ecc71;">متصل ومستقر عبر Supabase</span></div>
+        <div class="admin-info-item">إجمالي عدد اللاعبين المسجلين: <span id="totalPlayersCount">0</span> لاعب</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">حالة اتصال اللاعبين المسجلين</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم اللاعب</th>
+              <th>الرقم الجامعي</th>
+              <th>الحالة (متصل / غير متصل)</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersStatusBody">
+            <tr><td colspan="3" style="text-align:center;">جاري جلب حالات اللاعبين...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
   <!-- 1. شاشة الأخبار والتحكم بالأخبار السابقة -->
-  <div id="newsTab" class="tab-content active">
+  <div id="newsTab" class="tab-content">
     <section class="card">
       <div class="card-title">نشر خبر جديد</div>
       <div class="form-group">
@@ -192,7 +267,7 @@ tr:hover{background:rgba(255,255,255,0.05)}
 
 </main>
 
-<!-- زر تبديل الألوان العائم -->
+<!-- زر تبديل الألوان العائم والمتحرك -->
 <button class="theme-toggle-btn" id="themeToggleBtn">
   🔴 <span>أبيض وأحمر</span>
 </button>
@@ -202,23 +277,38 @@ const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function toggleColorReverse() {
-  document.body.classList.toggle("color-reversed");
-  const isReversed = document.body.classList.contains("color-reversed");
-  localStorage.setItem("analyzer_color_reversed", isReversed ? "true" : "false");
+// التحكم بالقائمة الجانبية (Sidebar)
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebarOverlay").classList.toggle("show");
 }
 
-if (localStorage.getItem("analyzer_color_reversed") === "true") {
-  document.body.classList.add("color-reversed");
+// مزامنة حالة الألوان عبر Supabase (بدلاً من LocalStorage)
+async function fetchThemeState() {
+  try {
+    const { data } = await supabaseClient.from("game_session").select("theme_reversed").eq("id", 1).maybeSingle();
+    if (data && data.theme_reversed) {
+      document.body.classList.add("color-reversed");
+    }
+  } catch(e) {}
+}
+
+async function toggleColorReverse() {
+  document.body.classList.toggle("color-reversed");
+  const isReversed = document.body.classList.contains("color-reversed");
+  try {
+    await supabaseClient.from("game_session").upsert({ id: 1, theme_reversed: isReversed, updated_at: new Date() });
+  } catch(e) {}
 }
 
 document.getElementById("themeToggleBtn").addEventListener("click", toggleColorReverse);
 
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   btn.classList.add('active');
+  toggleSidebar();
 }
 
 function escapeText(value) {
@@ -227,6 +317,7 @@ function escapeText(value) {
   })[ch]);
 }
 
+// نشر وجلب وإدارة الأخبار السابقة
 async function publishNews() {
   const title = document.getElementById("newsTitle").value.trim();
   const body = document.getElementById("newsBody").value.trim();
@@ -333,16 +424,19 @@ document.getElementById("charImageFile").addEventListener("change", function(eve
   reader.readAsDataURL(file);
 });
 
+// العجلة بدون تكرار مخزنة عبر Supabase
 async function spinWheel() {
   const wheelResultEl = document.getElementById("wheelResult");
   try {
     const { data: users, error } = await supabaseClient.from("users").select("name, personality_type");
+    const { data: sessionData } = await supabaseClient.from("game_session").select("used_chars").eq("id", 1).maybeSingle();
+    
     if (error || !users || !users.length) {
       wheelResultEl.textContent = "لا توجد شخصيات مسجلة كافية في قاعدة البيانات.";
       return;
     }
 
-    let usedCharacters = JSON.parse(localStorage.getItem("used_wheel_chars") || "[]");
+    let usedCharacters = sessionData?.used_chars || [];
     let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
 
     if (availableUsers.length === 0) {
@@ -352,7 +446,8 @@ async function spinWheel() {
 
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
     usedCharacters.push(randomUser.name);
-    localStorage.setItem("used_wheel_chars", JSON.stringify(usedCharacters));
+    
+    await supabaseClient.from("game_session").upsert({ id: 1, used_chars: usedCharacters, updated_at: new Date() });
 
     document.getElementById("charName").value = randomUser.name;
     document.getElementById("correctPersonality").value = randomUser.personality_type || "";
@@ -383,7 +478,6 @@ async function updateCharacter() {
 
 document.getElementById("updateCharBtn").addEventListener("click", updateCharacter);
 
-// تشغيل وتوليد معرف جلسة فريد جديد (session_id) لكي يتمكن اللاعبون من المشاركة في كل جلسة جديدة
 async function setGameState(isActive) {
   const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
   const statusEl = document.getElementById("timerStatus");
@@ -415,13 +509,45 @@ const pageSize = 5;
 
 async function fetchUsersList() {
   const tbody = document.getElementById("usersTableBody");
+  const adminStatusBody = document.getElementById("adminUsersStatusBody");
+  
   try {
     const { data: users, error } = await supabaseClient.from("users").select("*").order("points", { ascending: false });
     if (error) throw error;
     allUsersData = users || [];
+    
+    // تحديث إجمالي اللاعبين في لوحة الأدمن الرئيسية
+    document.getElementById("totalPlayersCount").textContent = allUsersData.length;
+    
+    // عرض جدول اللاعبين وحالتهم (متصل / غير متصل)
+    if (allUsersData.length === 0) {
+      adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا توجد حسابات مسجلة بعد.</td></tr>';
+    } else {
+      const now = new Date().getTime();
+      adminStatusBody.innerHTML = allUsersData.map(user => {
+        // يعتبر اللاعب متصلاً إذا تم تحديث بياناته خلال آخر 3 دقائق (180000ms) أو كتقدير افتراضي
+        const lastActivity = user.updated_at ? new Date(user.updated_at).getTime() : 0;
+        const isOnline = (now - lastActivity) < 180000;
+        
+        return `
+          <tr>
+            <td>${escapeText(user.name || "—")}</td>
+            <td dir="ltr">${escapeText(user.university_id)}</td>
+            <td>
+              <span class="status-badge">
+                <span class="${isOnline ? 'dot-online' : 'dot-offline'}"></span>
+                ${isOnline ? 'متصل' : 'غير متصل'}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
     renderUsersTable();
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">تعذر تحميل اللاعبين.</td></tr>';
+    adminStatusBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">تعذر جلب حالات اللاعبين.</td></tr>';
   }
 }
 
@@ -511,6 +637,7 @@ async function updateUserRow(universityId) {
   } catch (err) { alert("حدث خطأ أثناء التحديث."); }
 }
 
+fetchThemeState();
 fetchUsersList();
 fetchPreviousNews();
 </script>
