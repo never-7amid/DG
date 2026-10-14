@@ -102,7 +102,6 @@ tr:hover{background:rgba(255,255,255,0.05)}
       <div class="status-msg" id="newsStatus"></div>
     </section>
 
-    <!-- قسم إدارة الأخبار السابقة (تعديل وحذف) -->
     <section class="card">
       <div class="card-title">إدارة الأخبار السابقة (تعديل / حذف)</div>
       <div class="news-manage-list" id="newsManageList">
@@ -156,8 +155,8 @@ tr:hover{background:rgba(255,255,255,0.05)}
         <input type="number" id="timerMinutes" placeholder="مثال: 3" min="1" value="3">
       </div>
       <div style="display:flex;gap:15px;margin-top:10px;">
-        <button class="btn" style="flex:1;" id="startTimerBtn">فتح اللعبة وتشغيل المؤقت للجميع</button>
-        <button class="btn btn-danger" style="flex:1;" id="stopTimerBtn">إيقاف وإغلاق اللعبة فوراً</button>
+        <button class="btn" style="flex:1;" id="startTimerBtn">فتح الجلسة وتشغيل المؤقت للجميع</button>
+        <button class="btn btn-danger" style="flex:1;" id="stopTimerBtn">إيقاف وإغلاق الجلسة فوراً</button>
       </div>
       <div class="status-msg" id="timerStatus"></div>
     </section>
@@ -203,7 +202,6 @@ const SUPABASE_URL = "https://nmbgghljqzsnqtcpchyn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmdnaGxqcXpzbnF0Y3BjaHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MzUwNDgsImV4cCI6MjEwNzMxMTA0OH0._zu6l9bsBYxEU6RntKK8fcq90FoaQwA8YVTN_ETaJVg";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// خاصية تبديل الألوان (Color Theme Toggle)
 function toggleColorReverse() {
   document.body.classList.toggle("color-reversed");
   const isReversed = document.body.classList.contains("color-reversed");
@@ -229,7 +227,6 @@ function escapeText(value) {
   })[ch]);
 }
 
-// نشر وجلب وإدارة الأخبار السابقة
 async function publishNews() {
   const title = document.getElementById("newsTitle").value.trim();
   const body = document.getElementById("newsBody").value.trim();
@@ -386,19 +383,26 @@ async function updateCharacter() {
 
 document.getElementById("updateCharBtn").addEventListener("click", updateCharacter);
 
+// تشغيل وتوليد معرف جلسة فريد جديد (session_id) لكي يتمكن اللاعبون من المشاركة في كل جلسة جديدة
 async function setGameState(isActive) {
   const minutes = parseInt(document.getElementById("timerMinutes").value) || 3;
   const statusEl = document.getElementById("timerStatus");
   const endTime = isActive ? new Date(new Date().getTime() + minutes * 60000).toISOString() : null;
+  const newSessionId = "session_" + Date.now();
 
   try {
-    const updateData = { id: 1, is_active: isActive, updated_at: new Date() };
+    const updateData = { 
+      id: 1, 
+      is_active: isActive, 
+      session_id: newSessionId, 
+      updated_at: new Date() 
+    };
     if (isActive) updateData.end_time = endTime;
 
     const { error } = await supabaseClient.from("game_session").upsert(updateData);
     if (error) throw error;
 
-    statusEl.textContent = isActive ? `تم فتح اللعبة وبدء المؤقت الموحد لمدة ${minutes} دقائق للجميع!` : "تم إيقاف اللعبة فوراً.";
+    statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
   } catch (err) { statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; }
 }
 
@@ -478,7 +482,7 @@ function renderUsersTable() {
   });
 
   document.getElementById("pageIndicator").textContent = `الصفحة ${currentPage} من ${Math.ceil(allUsersData.length / pageSize) || 1}`;
-  document.getElementById("prevBtndisabled", currentPage === 1);
+  document.getElementById("prevBtn").disabled = currentPage === 1;
   document.getElementById("nextBtn").disabled = end >= allUsersData.length;
 }
 
