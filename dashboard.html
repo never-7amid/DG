@@ -523,7 +523,6 @@ document.getElementById("charImageFile").addEventListener("change", function(eve
   reader.readAsDataURL(file);
 });
 
-// العجلة تعتمد 100% على جدول game_session وتخزين used_chars في Supabase
 async function spinWheel() {
   const wheelResultEl = document.getElementById("wheelResult");
   try {
@@ -550,7 +549,6 @@ async function spinWheel() {
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
     usedCharacters.push(randomUser.name);
     
-    // حفظ قائمة الشخصيات المستخدمة مباشرة في قاعدة بيانات Supabase
     await supabaseClient.from("game_session").update({ used_chars: usedCharacters, updated_at: new Date() }).eq("id", 1);
 
     document.getElementById("charName").value = randomUser.name;
@@ -594,17 +592,20 @@ async function setGameState(isActive) {
     const updateData = { 
       is_active: isActive, 
       session_id: newSessionId, 
+      end_time: endTime,
       updated_at: new Date() 
     };
-    if (isActive) updateData.end_time = endTime;
-    else updateData.end_time = null;
 
-    const { error } = await supabaseClient.from("game_session").update(updateData).eq("id", 1);
+    // استخدام upsert أو update مع ضمان وجود الصف id = 1
+    const { error } = await supabaseClient.from("game_session").upsert({ id: 1, ...updateData });
     if (error) throw error;
 
     statusEl.textContent = isActive ? `تم فتح جلسة جديدة وبدء المؤقت لمدة ${minutes} دقائق للجميع بنجاح!` : "تم إيقاف الجلسة وإغلاقها فوراً.";
     fetchSessionMonitor();
-  } catch (err) { statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; }
+  } catch (err) { 
+    console.error(err);
+    statusEl.textContent = "حدث خطأ أثناء تغيير الحالة."; 
+  }
 }
 
 document.getElementById("startTimerBtn").addEventListener("click", () => setGameState(true));
