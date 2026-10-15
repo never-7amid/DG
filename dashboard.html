@@ -267,8 +267,11 @@ tr:hover{background:rgba(255,255,255,0.05)}
           <div class="session-timer-badge" id="monitorCountdown">00:00</div>
         </div>
       </div>
-      <!-- زر الصيانة الجانبي -->
-      <button class="btn btn-danger" id="maintenanceStopBtn" style="margin-top:10px;">⚠️ إيقاف الجلسة وإغلاقها للصيانة والطوارئ</button>
+      <!-- أزرار الصيانة وإعادة الضبط -->
+      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+        <button class="btn btn-danger" id="maintenanceStopBtn" style="flex:1;">⚠️ إيقاف الجلسة للصيانة والطوارئ</button>
+        <button class="btn btn-danger" id="resetSystemBtn" style="flex:1; background:linear-gradient(110deg,#780000,#d90429);">🔄 إعادة ضبط اللعبة بالكامل (Reset)</button>
+      </div>
     </section>
 
     <section class="card">
@@ -614,7 +617,6 @@ async function spinWheel() {
 
 document.getElementById("spinWheelBtn").addEventListener("click", spinWheel);
 
-// زر الحفظ وفتح الجلسة المدمج (لا يسمح بتكرار الشخصية)
 async function saveAndStartSession() {
   const character_name = document.getElementById("charName").value.trim();
   const correct_personality = document.getElementById("correctPersonality").value.trim().toUpperCase();
@@ -630,7 +632,6 @@ async function saveAndStartSession() {
   }
 
   try {
-    // التحقق من عدم تكرار الشخصية في الجلسات السابقة عبر used_chars
     const { data: sessionData } = await supabaseClient.from("game_session").select("used_chars").eq("id", 1).maybeSingle();
     let usedCharacters = sessionData?.used_chars || [];
     if (!Array.isArray(usedCharacters)) {
@@ -695,6 +696,29 @@ async function maintenanceStopSession() {
 
 document.getElementById("maintenanceStopBtn").addEventListener("click", maintenanceStopSession);
 
+// زر إعادة الضبط الشامل للعبة (Reset System)
+async function resetGameSystem() {
+  if (!confirm("⚠️ تحذير خطير: هل أنت متأكد تماماً من رغبتك في إعادة ضبط اللعبة؟ سيتم تصفير نقاط جميع اللاعبين وحذف سجل الجلسات والمشاركات وإلغاء الجلسة الحالية دون حذف الحسابات.")) return;
+  const statusEl = document.getElementById("sessionCharStatus");
+  try {
+    const { error } = await supabaseClient.rpc('reset_game_system');
+    if (error) throw error;
+
+    alert("✅ تمت إعادة ضبط اللعبة بنجاح! عاد كل شيء كأنه يبدأ من الصفر.");
+    statusEl.textContent = "🔄 تم عمل Reset شامل للعبة وتصفير النقاط بنجاح.";
+    
+    // تحديث الواجهات فوراً
+    fetchSessionMonitor();
+    fetchUsersList();
+  } catch(e) {
+    console.error(e);
+    alert("حدث خطأ أثناء تنفيذ عملية الـ Reset.");
+    statusEl.textContent = "❌ فشل تنفيذ الـ Reset.";
+  }
+}
+
+document.getElementById("resetSystemBtn").addEventListener("click", resetGameSystem);
+
 async function fetchSessionMonitor() {
   try {
     const { data: session } = await supabaseClient.from("game_session").select("*").eq("id", 1).maybeSingle();
@@ -728,7 +752,6 @@ async function fetchSessionMonitor() {
           badgeEl.textContent = "منتهية";
           countdownEl.textContent = "00:00";
 
-          // ميزة عمل جولة متتالية تلقائياً مع مراعاة عدم التكرار
           if (session.auto_next_round && !autoNextRoundTriggered) {
             autoNextRoundTriggered = true;
             await triggerAutoNextRound();
@@ -753,7 +776,6 @@ async function fetchSessionMonitor() {
   }
 }
 
-// دالة بدء الجولة المتتالية تلقائياً بشخصية جديدة فريدة تماماً
 async function triggerAutoNextRound() {
   try {
     const { data: users } = await supabaseClient.from("users").select("name, personality_type");
@@ -764,7 +786,7 @@ async function triggerAutoNextRound() {
     let usedCharacters = sessionData?.used_chars || [];
     let availableUsers = users.filter(u => !usedCharacters.includes(u.name));
 
-    if (availableUsers.length === 0) return; // نفدت جميع الشخصيات الفريدة
+    if (availableUsers.length === 0) return;
 
     let randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
     usedCharacters.push(randomUser.name);
@@ -789,7 +811,6 @@ async function triggerAutoNextRound() {
   }
 }
 
-// ----------------- سجل الجلسات السابقة مع Pagination والتاريخ بالساعات والدقائق -----------------
 let allSessionsData = [];
 let sessionsCurrentPage = 1;
 const sessionsPageSize = 5;
@@ -864,7 +885,6 @@ document.getElementById("sessionsNextBtn").addEventListener("click", () => {
   if (sessionsCurrentPage * sessionsPageSize < allSessionsData.length) { sessionsCurrentPage++; renderSessionsTable(); }
 });
 
-// ----------------- إدارة اللاعبين وحالة الاتصال مع Pagination -----------------
 let allUsersData = [];
 let currentPage = 1;
 const pageSize = 5;
@@ -968,7 +988,7 @@ function renderUsersTable() {
     
     const tdPts = document.createElement("td");
     const inputPts = document.createElement("input");
-    inputPts.type = "number";
+    inputPts.type.value = "number";
     inputPts.id = `pts_${user.university_id}`;
     inputPts.value = user.points || 0;
     inputPts.style.width = "80px";
@@ -1004,7 +1024,7 @@ document.getElementById("nextBtn").addEventListener("click", () => {
 });
 
 async function updateUserRow(universityId) {
-  const newType = document.getElementById(`type_${universityId}`).value.trim().toUpperCase();
+  The newType = document.getElementById(`type_${universityId}`).value.trim().toUpperCase();
   const newPts = parseInt(document.getElementById(`pts_${universityId}`).value) || 0;
   try {
     const { error } = await supabaseClient.from("users").update({ personality_type: newType, points: newPts }).eq("university_id", universityId);
