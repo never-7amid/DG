@@ -669,7 +669,7 @@ async function saveAndStartSession() {
     fetchSessionMonitor();
   } catch (err) { 
     console.error(err);
-    statusEl.textContent = "حدث خطأ أثناء حفظ وحفظ الجلسة."; 
+    statusEl.textContent = "حدث خطأ أثناء حفظ وفتح الجلسة."; 
   }
 }
 
@@ -710,8 +710,8 @@ async function resetGameSystem() {
     fetchSessionMonitor();
     fetchUsersList();
   } catch(e) {
-    console.error(e);
-    alert("حدث خطأ أثناء تنفيذ عملية الـ Reset.");
+    console.error("Reset Error details:", e);
+    alert("❌ حدث خطأ أثناء تنفيذ الـ Reset: " + (e.message || JSON.stringify(e)));
     statusEl.textContent = "❌ فشل تنفيذ الـ Reset.";
   }
 }
